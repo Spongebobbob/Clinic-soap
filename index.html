@@ -1297,43 +1297,53 @@ function buildPiSentence(key, tpl, answers, age, sex) {
 // ========================== Generate SOAP ==========================
 document.getElementById("generateBtn").addEventListener("click", () => {
   const key = ccSelect.value;
-  if (!key) { alert("Select CC first"); return; }
+  if (!key) { 
+    alert("Select CC first"); 
+    return; 
+  }
 
   const tpl = templates[key];
 
+  // 收集問診答案
   const answers = {};
   tpl.history.forEach(q => {
-    answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
+    const el = document.getElementById("q_" + q.id);
+    answers[q.id] = (el && el.value ? el.value : "").trim();
   });
 
+  // 基本資料
   const age = document.getElementById("age").value;
   const sex = document.getElementById("sex").value;
 
-  const ph  = (document.getElementById("ph").value || "").trim() || "denied";
-  const al  = (document.getElementById("allergy").value || "").trim() || "NKA";
-  const med = (document.getElementById("med").value || "").trim() || "denied";
-  const fh  = (document.getElementById("fh").value || "").trim() || "no contributory";
-  const sh  = (document.getElementById("sh").value || "").trim() 
-              || "denied alcohol, betel or cigarette";
-  
+  // PH / Allergy / Med / FH / Social（含預設值）
+  const ph     = (document.getElementById("ph")?.value     || "").trim() || "denied";
+  const al     = (document.getElementById("allergy")?.value|| "").trim() || "NKA";
+  const med    = (document.getElementById("med")?.value    || "").trim() || "denied";
+  const fh     = (document.getElementById("fh")?.value     || "").trim() || "no contributory";
+  const social = (document.getElementById("social")?.value || "").trim() || "denied alcohol, betel or cigarette";
+
   // ----- S -----
   let S = "S:\n";
-  const ccLine = `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}${answers["duration"] ? " for " + answers["duration"] : ""}`;
+  const ccText = tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1);
+  const ccLine = `CC: ${ccText}${answers["duration"] ? " for " + answers["duration"] : ""}`;
   S += ccLine + "\n";
 
   const piSentence = buildPiSentence(key, tpl, answers, age, sex);
   S += "PI:\n" + piSentence + "\n";
 
-  S += `PH: ${ph}\nAllergy: ${al}\nMed: ${med}\nFH: ${fh}\nSH: ${sh}\n\n`;
+  S += `PH: ${ph}\n`;
+  S += `Allergy: ${al}\n`;
+  S += `Med: ${med}\n`;
+  S += `FH: ${fh}\n`;
+  S += `Social: ${social}\n\n`;
 
   // ----- O -----
   let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
 
-  // ----- DDx -----
-
-  // ----- S + O without DDx -----
-  output.value = S + O + D;
+  // 不再輸出 DDx，僅 S + O
+  output.value = S + O;
 });
+
 
 // ========================== OpenEvidence: copy full SOAP ==========================
 document.getElementById("openEvidenceBtn").addEventListener("click", () => {
