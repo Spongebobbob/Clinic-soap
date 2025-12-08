@@ -132,6 +132,7 @@ Sex:
     <option value="constipation">Constipation</option>
     <option value="edema">Leg swelling / Edema</option>
     <option value="fatigue">Fatigue</option>
+    <option value="weight_loss">Body weight loss / Unintentional weight loss</option>
     <option value="fuo">Fever of unclear source</option>
 
         <!-- Chronic disease follow-up -->
@@ -528,6 +529,61 @@ const templates = {
       "Depression",
       "Sleep apnea",
       "Chronic systemic illness"
+    ]
+  },
+
+  // ---- Body weight loss ----
+  weight_loss: {
+    nameEn: "body weight loss",
+    history: [
+      // Amount & time course
+      { id: "duration",      labelEn: "Duration",                    labelZh: "體重減輕多久？" },
+      { id: "amount",        labelEn: "Amount",                      labelZh: "大約瘦了多少？（幾公斤或百分比）" },
+      { id: "intentional",   labelEn: "Intentional?",                labelZh: "是刻意減重，還是非刻意？" },
+
+      // Appetite & intake
+      { id: "appetite",      labelEn: "Appetite",                    labelZh: "最近食慾如何？有沒有變差？" },
+      { id: "intake",        labelEn: "Dietary intake",              labelZh: "吃的量有比以前少嗎？" },
+      { id: "early_satiety", labelEn: "Early satiety",               labelZh: "會不會一吃就飽？（早期飽足感）" },
+
+      // Constitutional symptoms (B symptoms)
+      { id: "b_symptoms",    labelEn: "Fever / night sweats",        labelZh: "有沒有發燒、夜間盜汗、明顯疲倦？" },
+      { id: "fatigue",       labelEn: "Fatigue",                     labelZh: "容易疲倦、虛弱嗎？" },
+
+      // GI symptoms
+      { id: "dysphagia",     labelEn: "Dysphagia",                   labelZh: "有沒有吞嚥困難？" },
+      { id: "gi",            labelEn: "GI symptoms",                 labelZh: "噁心、嘔吐、腹痛、腹瀉？" },
+      { id: "bowel_change",  labelEn: "Change of bowel habit",       labelZh: "排便習慣有改變嗎？" },
+      { id: "gi_bleed",      labelEn: "GI bleeding",                 labelZh: "有沒有黑便或血便？" },
+
+      // Endocrine
+      { id: "hyperthyroid",  labelEn: "Hyperthyroid symptoms",       labelZh: "怕熱、心悸、手抖？" },
+      { id: "dm",            labelEn: "DM triad",                    labelZh: "口渴、多尿、多食？" },
+
+      // Psych / eating behavior
+      { id: "mood",          labelEn: "Mood / depression",           labelZh: "最近心情、壓力如何？憂鬱？" },
+      { id: "eating_dis",    labelEn: "Eating disorder behavior",    labelZh: "有沒有刻意節食、暴食或催吐？" },
+
+      // Medication & substances
+      { id: "meds",          labelEn: "New medications",             labelZh: "最近有沒有換新藥或開始新藥？" },
+      { id: "substance",     labelEn: "Substance use",               labelZh: "抽菸、喝酒或其他藥物使用？" },
+
+      // Malignancy / infection
+      { id: "resp",          labelEn: "Resp symptoms",               labelZh: "有沒有慢性咳嗽、咳血、聲音沙啞？" },
+      { id: "tb_contact",    labelEn: "TB contact",                  labelZh: "是否有結核病接觸史？" },
+      { id: "lump",          labelEn: "Lumps / lymphadenopathy",     labelZh: "有沒有不明腫塊或淋巴結腫大？" },
+
+      // Function
+      { id: "function",      labelEn: "Functional status",           labelZh: "體力、日常活動能力有沒有明顯下降？" }
+    ],
+    ddx: [
+      "Malignancy (GI, lung, hematologic, others)",
+      "Hyperthyroidism",
+      "Diabetes mellitus",
+      "Chronic infection (e.g., tuberculosis)",
+      "Major depressive disorder",
+      "Chronic GI disease or malabsorption",
+      "Medication or substance-related weight loss"
     ]
   },
 
@@ -941,7 +997,52 @@ function buildPiSentence(key, tpl, answers, age, sex) {
     if (answers["anemia"])     fragments.push(`anemia symptoms: ${answers["anemia"]}`);
     if (answers["thyroid"])    fragments.push(`thyroid symptoms: ${answers["thyroid"]}`);
     if (answers["chronic_dz"]) fragments.push(`chronic diseases: ${answers["chronic_dz"]}`);
-  } else if (key === "fuo") {
+    } else if (key === "weight_loss") {
+    // 開頭：刻意 / 非刻意減重
+    if (answers["amount"]) {
+      const intentPhrase = answers["intentional"]
+        ? `${answers["intentional"]} weight loss of ${answers["amount"]}`
+        : `weight loss of ${answers["amount"]}`;
+      fragments.push(intentPhrase);
+    } else if (answers["intentional"]) {
+      fragments.push(`${answers["intentional"]} weight loss`);
+    }
+
+    // Appetite & intake
+    if (answers["appetite"])      fragments.push(`appetite: ${answers["appetite"]}`);
+    if (answers["intake"])        fragments.push(`dietary intake: ${answers["intake"]}`);
+    if (answers["early_satiety"]) fragments.push(`early satiety: ${answers["early_satiety"]}`);
+
+    // B symptoms
+    if (answers["b_symptoms"])    fragments.push(`fever/night sweats: ${answers["b_symptoms"]}`);
+    if (answers["fatigue"])       fragments.push(`fatigue: ${answers["fatigue"]}`);
+
+    // GI
+    if (answers["dysphagia"])     fragments.push(`dysphagia: ${answers["dysphagia"]}`);
+    if (answers["gi"])            fragments.push(`GI symptoms: ${answers["gi"]}`);
+    if (answers["bowel_change"])  fragments.push(`change of bowel habit: ${answers["bowel_change"]}`);
+    if (answers["gi_bleed"])      fragments.push(`GI bleeding: ${answers["gi_bleed"]}`);
+
+    // Endocrine
+    if (answers["hyperthyroid"])  fragments.push(`hyperthyroid symptoms: ${answers["hyperthyroid"]}`);
+    if (answers["dm"])            fragments.push(`DM triad: ${answers["dm"]}`);
+
+    // Psych
+    if (answers["mood"])          fragments.push(`mood/stress: ${answers["mood"]}`);
+    if (answers["eating_dis"])    fragments.push(`eating behavior: ${answers["eating_dis"]}`);
+
+    // Meds & substances
+    if (answers["meds"])          fragments.push(`recent medications: ${answers["meds"]}`);
+    if (answers["substance"])     fragments.push(`substance use: ${answers["substance"]}`);
+
+    // Malignancy / infection
+    if (answers["resp"])          fragments.push(`respiratory symptoms: ${answers["resp"]}`);
+    if (answers["tb_contact"])    fragments.push(`TB contact: ${answers["tb_contact"]}`);
+    if (answers["lump"])          fragments.push(`lumps/lymph nodes: ${answers["lump"]}`);
+
+    // Function
+    if (answers["function"])      fragments.push(`functional status: ${answers["function"]}`);
+} else if (key === "fuo") {
     if (answers["pattern"])    fragments.push(`fever pattern: ${answers["pattern"]}`);
     if (answers["localizing"]) fragments.push(`localizing symptoms: ${answers["localizing"]}`);
     if (answers["weight"])     fragments.push(`weight loss/night sweats: ${answers["weight"]}`);
