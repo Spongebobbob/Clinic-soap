@@ -132,7 +132,6 @@
   <button id="generateBtn">Generate SOAP</button>
   <button id="openEvidenceBtn">Open in OpenEvidence</button>
   <button id="chatgptBtn">Open in ChatGPT (PC)</button>
-  <button id="chatgptQrBtn">QR for ChatGPT (mobile)</button>
   <button id="askAiBtn">Ask AI (silent)</button>
 </div>
 
@@ -744,39 +743,6 @@ Please:
   window.open("https://chatgpt.com/", "_blank");
 });
 
-// ========================== ChatGPT mobile：產生 QR code ==========================
-const chatgptQrBtn = document.getElementById("chatgptQrBtn");
-const qrcodeDiv = document.getElementById("qrcode");
-
-chatgptQrBtn.addEventListener("click", () => {
-  const text = output.value.trim();
-  if (!text) {
-    alert("請先按『Generate SOAP』產生病例，再產生 QR。");
-    return;
-  }
-
-  const promptText =
-`You are an internal medicine consultant.
-Here is a clinic SOAP note:
-
-${text}
-
-Please:
-1) List likely diagnoses with brief reasoning.
-2) Suggest key physical exams and tests.
-3) Provide initial management plan.`.trim();
-
-  // 清空舊的 QR
-  qrcodeDiv.innerHTML = "";
-  // 產生新的 QR code
-  new QRCode(qrcodeDiv, {
-    text: promptText,
-    width: 256,
-    height: 256
-  });
-
-  alert("已產生手機用 ChatGPT QR code，請用手機相機掃描此區域。");
-});
 
 // ========================== Ask AI via backend (silent mode) ==========================
 const askAiBtn = document.getElementById("askAiBtn");
