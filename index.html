@@ -27,6 +27,7 @@
       border: 1px solid #555;
       border-radius: 4px;
       padding: 8px;
+      white-space: pre-wrap;
     }
     select, input {
       padding: 4px;
@@ -69,7 +70,7 @@
   </select>
 </div>
 
-<!-- Past history group -->
+<!-- Past history -->
 <div class="section">
   <strong>Past / Allergy / Med / Family</strong>
   <label>PH:</label>
@@ -87,13 +88,29 @@
   <label>Chief complaint:</label>
   <select id="ccSelect">
     <option value="">Select</option>
+
+    <!-- 原本的 -->
     <option value="sore_throat">Sore throat</option>
     <option value="fever">Fever / URI</option>
     <option value="abd_pain">Abdominal pain</option>
+
+    <!-- 內科主訴 -->
+    <option value="chest_pain">Chest pain</option>
+    <option value="sob">Shortness of breath / Dyspnea</option>
+    <option value="headache">Headache</option>
+    <option value="dizziness">Dizziness / Vertigo</option>
+    <option value="palpitations">Palpitations</option>
+    <option value="cough">Cough</option>
+    <option value="abd_bloating">Abdominal bloating / Distension</option>
+    <option value="diarrhea">Diarrhea</option>
+    <option value="constipation">Constipation</option>
+    <option value="edema">Leg swelling / Edema</option>
+    <option value="fatigue">Fatigue</option>
+    <option value="fuo">Fever of unclear source</option>
   </select>
 </div>
 
-<!-- History dynamic area -->
+<!-- History questions -->
 <div class="section">
   <strong>History questions:</strong>
   <div id="historyArea">Select a chief complaint to begin.</div>
@@ -101,30 +118,29 @@
 
 <!-- Buttons -->
 <div class="section">
-  <button id="generateBtn">Generate SOAP + Dx summary</button>
+  <button id="generateBtn">Generate SOAP</button>
   <button id="openEvidenceBtn">Open in OpenEvidence</button>
 </div>
 
 <!-- Output -->
 <div class="section">
-  <strong>Output (copy into HIS):</strong>
+  <strong>Output (copy into HIS / OpenEvidence):</strong>
   <textarea id="output"></textarea>
 </div>
 
 <script>
-// =========================================================
-// TEMPLATES FOR CC
-// =========================================================
+// ========================== Templates ==========================
 const templates = {
+  // ---- 原本：sore throat / fever / abd pain ----
   sore_throat: {
     nameEn: "sore throat",
     history: [
-      { id:"duration", labelEn:"Duration", labelZh:"症狀多久？（天）" },
-      { id:"fever", labelEn:"Fever history / maximal temperature", labelZh:"發燒？最高幾度？" },
-      { id:"cough", labelEn:"Cough", labelZh:"咳嗽？" },
-      { id:"rhinorrhea", labelEn:"Rhinorrhea / nasal congestion", labelZh:"流鼻水？鼻塞？" },
-      { id:"odynophagia", labelEn:"Odynophagia", labelZh:"吞嚥痛？" },
-      { id:"tocc", labelEn:"TOCC", labelZh:"接觸史 / 感染接觸者？" }
+      { id:"duration",   labelEn:"Duration",                            labelZh:"症狀多久？（天）" },
+      { id:"fever",      labelEn:"fever up to",                         labelZh:"發燒？最高幾度？" },
+      { id:"rhinorrhea", labelEn:"rhinorrhea",                          labelZh:"流鼻水？鼻塞？" },
+      { id:"odynophagia",labelEn:"odynophagia",                         labelZh:"吞嚥痛？" },
+      { id:"cough",      labelEn:"cough",                               labelZh:"咳嗽？" },
+      { id:"tocc",       labelEn:"TOCC",                                labelZh:"接觸史 / 感染接觸者？" }
     ],
     ddx: [
       "Viral pharyngitis",
@@ -136,12 +152,12 @@ const templates = {
   fever: {
     nameEn: "fever",
     history: [
-      { id:"duration", labelEn:"Duration", labelZh:"發燒多久？" },
-      { id:"max_temp", labelEn:"Maximal temperature", labelZh:"最高體溫？" },
-      { id:"resp", labelEn:"Respiratory symptoms", labelZh:"呼吸道症狀？" },
-      { id:"gi", labelEn:"GI symptoms", labelZh:"腸胃症狀？" },
-      { id:"urinary", labelEn:"Urinary symptoms", labelZh:"泌尿症狀？" },
-      { id:"travel", labelEn:"Travel / TOCC", labelZh:"旅遊史/TOCC？" }
+      { id:"duration", labelEn:"Duration",               labelZh:"發燒多久？" },
+      { id:"max_temp", labelEn:"fever up to",            labelZh:"最高體溫？" },
+      { id:"resp",     labelEn:"respiratory symptoms",   labelZh:"呼吸道症狀？" },
+      { id:"gi",       labelEn:"GI symptoms",            labelZh:"腸胃症狀？" },
+      { id:"urinary",  labelEn:"urinary symptoms",       labelZh:"泌尿症狀？" },
+      { id:"travel",   labelEn:"travel / TOCC",          labelZh:"旅遊史/TOCC？" }
     ],
     ddx: [
       "Viral infection",
@@ -154,13 +170,13 @@ const templates = {
   abd_pain: {
     nameEn: "abdominal pain",
     history: [
-      { id:"duration", labelEn:"Duration", labelZh:"腹痛多久？" },
-      { id:"location", labelEn:"Pain location", labelZh:"部位？" },
-      { id:"character", labelEn:"Pain character", labelZh:"性質？" },
-      { id:"gi", labelEn:"GI symptoms", labelZh:"噁心/嘔吐/腹瀉？" },
-      { id:"bleed", labelEn:"GI bleeding", labelZh:"黑便/血便？" },
-      { id:"urinary", labelEn:"Urinary symptoms", labelZh:"泌尿症狀？" },
-      { id:"gyne", labelEn:"Gynecologic", labelZh:"月經/懷孕？（女性）" }
+      { id:"duration", labelEn:"Duration",         labelZh:"腹痛多久？" },
+      { id:"location", labelEn:"pain location",    labelZh:"部位？" },
+      { id:"character",labelEn:"pain character",   labelZh:"性質？" },
+      { id:"gi",       labelEn:"GI symptoms",      labelZh:"噁心/嘔吐/腹瀉？" },
+      { id:"bleed",    labelEn:"GI bleeding",      labelZh:"黑便/血便？" },
+      { id:"urinary",  labelEn:"urinary symptoms", labelZh:"泌尿症狀？" },
+      { id:"gyne",     labelEn:"gynecologic",      labelZh:"月經/懷孕？（女性）" }
     ],
     ddx: [
       "Gastroenteritis",
@@ -169,16 +185,275 @@ const templates = {
       "Cholecystitis",
       "Renal colic"
     ]
+  },
+
+  // ---- 新增：Chest pain ----
+  chest_pain: {
+    nameEn: "chest pain",
+    history: [
+      { id:"duration",   labelEn:"Duration",                 labelZh:"胸痛多久？" },
+      { id:"onset",      labelEn:"onset",                    labelZh:"起病時間/方式？" },
+      { id:"location",   labelEn:"pain location",            labelZh:"部位？" },
+      { id:"character",  labelEn:"pain character",           labelZh:"性質？（壓迫/刺痛/悶痛）" },
+      { id:"radiation",  labelEn:"radiation",                labelZh:"有放散嗎？" },
+      { id:"exertion",   labelEn:"relation to exertion",     labelZh:"勞累相關？" },
+      { id:"dyspnea",    labelEn:"dyspnea",                  labelZh:"喘？" },
+      { id:"diaphoresis",labelEn:"diaphoresis",              labelZh:"冒冷汗？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",          labelZh:"噁心/嘔吐？" },
+      { id:"risk",       labelEn:"CV risk factors",          labelZh:"心血管危險因子？(HTN/DM/DLP/吸菸)" }
+    ],
+    ddx: [
+      "Acute coronary syndrome",
+      "Pulmonary embolism",
+      "Aortic dissection",
+      "Pneumonia or pleuritis",
+      "GERD / esophageal spasm",
+      "Musculoskeletal chest wall pain"
+    ]
+  },
+
+  // ---- SOB ----
+  sob: {
+    nameEn: "shortness of breath",
+    history: [
+      { id:"duration",   labelEn:"Duration",             labelZh:"喘多久？" },
+      { id:"onset",      labelEn:"onset",                labelZh:"起病時間/方式？" },
+      { id:"exertional", labelEn:"exertional dyspnea",   labelZh:"勞累時會喘？" },
+      { id:"orthopnea",  labelEn:"orthopnea / PND",      labelZh:"平躺喘/夜間陣發性喘？" },
+      { id:"cough",      labelEn:"cough/sputum",         labelZh:"咳嗽/痰？" },
+      { id:"wheezing",   labelEn:"wheezing",             labelZh:"喘鳴？" },
+      { id:"fever",      labelEn:"fever",                labelZh:"發燒？" },
+      { id:"leg_swelling",labelEn:"leg swelling",        labelZh:"下肢水腫？" },
+      { id:"risk",       labelEn:"smoking / cardiac hx", labelZh:"吸菸/心臟病史？" }
+    ],
+    ddx: [
+      "Heart failure",
+      "COPD/asthma exacerbation",
+      "Pneumonia",
+      "Pulmonary embolism",
+      "Anemia"
+    ]
+  },
+
+  // ---- Headache ----
+  headache: {
+    nameEn: "headache",
+    history: [
+      { id:"duration",   labelEn:"Duration",              labelZh:"頭痛多久？" },
+      { id:"onset",      labelEn:"onset (sudden/gradual)",labelZh:"起病（突然/漸進）？" },
+      { id:"location",   labelEn:"location",              labelZh:"部位？" },
+      { id:"character",  labelEn:"character",             labelZh:"性質？（搏動/壓迫）" },
+      { id:"severity",   labelEn:"severity",              labelZh:"嚴重度？" },
+      { id:"photo",      labelEn:"photophobia/phonophobia",labelZh:"怕光/怕吵？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",       labelZh:"噁心/嘔吐？" },
+      { id:"neuro",      labelEn:"neuro deficits",        labelZh:"肢體無力/說話不清？" },
+      { id:"neck",       labelEn:"neck stiffness",        labelZh:"頸部僵硬？" }
+    ],
+    ddx: [
+      "Migraine",
+      "Tension-type headache",
+      "Cluster headache",
+      "Subarachnoid hemorrhage (if thunderclap)",
+      "Meningitis"
+    ]
+  },
+
+  // ---- Dizziness / Vertigo ----
+  dizziness: {
+    nameEn: "dizziness",
+    history: [
+      { id:"duration",   labelEn:"Duration",              labelZh:"頭暈多久？" },
+      { id:"type",       labelEn:"type (vertigo/presyncope)",labelZh:"性質（旋轉/快暈倒）？" },
+      { id:"positional", labelEn:"positional",            labelZh:"與體位改變有關？" },
+      { id:"hearing",    labelEn:"hearing loss/tinnitus", labelZh:"聽力改變/耳鳴？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",       labelZh:"噁心/嘔吐？" },
+      { id:"neuro",      labelEn:"neuro deficits",        labelZh:"肢體無力/說話不清？" },
+      { id:"cardiac",    labelEn:"cardiac history",       labelZh:"有心臟病或心律不整？" }
+    ],
+    ddx: [
+      "Benign paroxysmal positional vertigo (BPPV)",
+      "Vestibular neuritis",
+      "Meniere disease",
+      "Orthostatic hypotension",
+      "Cerebellar or brainstem stroke"
+    ]
+  },
+
+  // ---- Palpitations ----
+  palpitations: {
+    nameEn: "palpitations",
+    history: [
+      { id:"duration",   labelEn:"Duration",                 labelZh:"心悸多久？" },
+      { id:"onset",      labelEn:"onset/offset",             labelZh:"發作怎麼開始/結束？" },
+      { id:"pattern",    labelEn:"pattern",                  labelZh:"規則/不規則？" },
+      { id:"triggers",   labelEn:"triggers (exertion/caffeine/ETOH)",labelZh:"誘發因子（運動/咖啡/酒）？" },
+      { id:"chest_pain", labelEn:"associated chest discomfort",labelZh:"伴隨胸悶/胸痛？" },
+      { id:"dizziness",  labelEn:"dizziness/syncope",        labelZh:"頭暈/暈厥？" },
+      { id:"thyroid",    labelEn:"thyroid symptoms",         labelZh:"甲狀腺症狀？" }
+    ],
+    ddx: [
+      "Supraventricular tachycardia",
+      "Atrial fibrillation",
+      "Premature beats (PAC/PVC)",
+      "Hyperthyroidism",
+      "Anxiety/panic"
+    ]
+  },
+
+  // ---- Cough ----
+  cough: {
+    nameEn: "cough",
+    history: [
+      { id:"duration",   labelEn:"Duration",          labelZh:"咳嗽多久？" },
+      { id:"productive", labelEn:"productive or dry", labelZh:"有痰/乾咳？" },
+      { id:"color",      labelEn:"sputum color",      labelZh:"痰顏色？" },
+      { id:"fever",      labelEn:"fever",             labelZh:"發燒？" },
+      { id:"wheezing",   labelEn:"wheezing",          labelZh:"喘鳴？" },
+      { id:"gerd",       labelEn:"GERD symptoms",     labelZh:"火燒心/逆流？" },
+      { id:"acei",       labelEn:"ACEi use",          labelZh:"有用ACEI？" },
+      { id:"smoking",    labelEn:"smoking history",   labelZh:"抽菸？" }
+    ],
+    ddx: [
+      "Viral upper respiratory infection",
+      "Acute bronchitis",
+      "Asthma/COPD",
+      "Pneumonia",
+      "GERD-related cough",
+      "ACE inhibitor–induced cough"
+    ]
+  },
+
+  // ---- Abdominal bloating / distension ----
+  abd_bloating: {
+    nameEn: "abdominal bloating",
+    history: [
+      { id:"duration",   labelEn:"Duration",             labelZh:"脹氣/腹脹多久？" },
+      { id:"pain",       labelEn:"abdominal pain",       labelZh:"有腹痛嗎？" },
+      { id:"bowel",      labelEn:"bowel habit change",   labelZh:"排便習慣改變？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",      labelZh:"噁心/嘔吐？" },
+      { id:"weight",     labelEn:"weight loss",          labelZh:"體重減輕？" },
+      { id:"ascites_risk",labelEn:"liver disease/alcohol",labelZh:"肝病/酗酒？" }
+    ],
+    ddx: [
+      "Functional bloating / IBS",
+      "Constipation",
+      "Ascites from liver disease",
+      "Small bowel obstruction",
+      "Ovarian or abdominal mass"
+    ]
+  },
+
+  // ---- Diarrhea ----
+  diarrhea: {
+    nameEn: "diarrhea",
+    history: [
+      { id:"duration",   labelEn:"Duration",          labelZh:"腹瀉多久？" },
+      { id:"frequency",  labelEn:"stool frequency",   labelZh:"一天幾次？" },
+      { id:"watery",     labelEn:"watery vs bloody",  labelZh:"水瀉還是血便？" },
+      { id:"fever",      labelEn:"fever",             labelZh:"發燒？" },
+      { id:"abd_pain",   labelEn:"abdominal pain",    labelZh:"腹痛？" },
+      { id:"dehydrate",  labelEn:"dehydration signs", labelZh:"口渴/尿量減少？" },
+      { id:"travel",     labelEn:"travel / food history",labelZh:"旅遊史/可疑飲食？" },
+      { id:"abx",        labelEn:"recent antibiotics",labelZh:"近期用抗生素？" }
+    ],
+    ddx: [
+      "Viral gastroenteritis",
+      "Bacterial enteritis / food poisoning",
+      "Clostridioides difficile infection",
+      "Inflammatory bowel disease",
+      "Irritable bowel syndrome"
+    ]
+  },
+
+  // ---- Constipation ----
+  constipation: {
+    nameEn: "constipation",
+    history: [
+      { id:"duration",   labelEn:"Duration",            labelZh:"便祕多久？" },
+      { id:"frequency",  labelEn:"stool frequency",     labelZh:"一週排便幾次？" },
+      { id:"hard",       labelEn:"hard stool",          labelZh:"乾硬糞便？" },
+      { id:"strain",     labelEn:"straining",           labelZh:"用力解便？" },
+      { id:"blood",      labelEn:"blood on stool",      labelZh:"便中血？" },
+      { id:"meds",       labelEn:"constipating meds",   labelZh:"有無便祕相關藥物（opioid等）？" },
+      { id:"thyroid",    labelEn:"hypothyroid symptoms",labelZh:"怕冷、體重增加？" }
+    ],
+    ddx: [
+      "Functional constipation",
+      "Irritable bowel syndrome with constipation",
+      "Medication-induced constipation",
+      "Hypothyroidism",
+      "Colorectal malignancy (if alarm features)"
+    ]
+  },
+
+  // ---- Edema ----
+  edema: {
+    nameEn: "leg swelling",
+    history: [
+      { id:"duration",   labelEn:"Duration",           labelZh:"水腫多久？" },
+      { id:"laterality", labelEn:"unilateral/bilateral",labelZh:"單側還是雙側？" },
+      { id:"pain",       labelEn:"pain/tenderness",    labelZh:"小腿疼痛？" },
+      { id:"sob",        labelEn:"associated SOB",     labelZh:"伴隨喘？" },
+      { id:"nocturia",   labelEn:"nocturia",           labelZh:"夜尿？" },
+      { id:"hx",         labelEn:"cardiac/renal/liver history",labelZh:"心臟/腎臟/肝病史？" },
+      { id:"travel",     labelEn:"recent immobilization/travel",labelZh:"久坐/長途旅行？" }
+    ],
+    ddx: [
+      "Heart failure",
+      "Deep vein thrombosis",
+      "Chronic venous insufficiency",
+      "Nephrotic syndrome",
+      "Cirrhosis with ascites"
+    ]
+  },
+
+  // ---- Fatigue ----
+  fatigue: {
+    nameEn: "fatigue",
+    history: [
+      { id:"duration",   labelEn:"Duration",               labelZh:"疲倦多久？" },
+      { id:"sleep",      labelEn:"sleep quality",          labelZh:"睡眠品質？" },
+      { id:"snore",      labelEn:"snoring/apnea",          labelZh:"打呼/睡眠呼吸中止？" },
+      { id:"mood",       labelEn:"mood / anhedonia",       labelZh:"心情低落/失去興趣？" },
+      { id:"anemia",     labelEn:"anemia symptoms",        labelZh:"頭暈/心悸/蒼白？" },
+      { id:"thyroid",    labelEn:"thyroid symptoms",       labelZh:"怕冷/體重變化？" },
+      { id:"chronic_dz", labelEn:"chronic medical illness",labelZh:"慢性疾病？" }
+    ],
+    ddx: [
+      "Anemia",
+      "Hypothyroidism",
+      "Depression",
+      "Sleep apnea",
+      "Chronic systemic illness"
+    ]
+  },
+
+  // ---- FUO / unclear fever ----
+  fuo: {
+    nameEn: "fever of unclear source",
+    history: [
+      { id:"duration",   labelEn:"Duration",              labelZh:"發燒多久？" },
+      { id:"pattern",    labelEn:"fever pattern",         labelZh:"發燒型態？（持續/間歇）" },
+      { id:"localizing", labelEn:"localizing symptoms",   labelZh:"局部症狀？（咳嗽/腹痛/尿痛等）" },
+      { id:"weight",     labelEn:"weight loss/night sweats",labelZh:"體重減輕/盜汗？" },
+      { id:"travel",     labelEn:"travel / exposure",     labelZh:"旅遊史/動物/環境暴露？" },
+      { id:"immune",     labelEn:"immunocompromised",     labelZh:"免疫不全/用類固醇？" }
+    ],
+    ddx: [
+      "Common localized infections (respiratory, urinary, GI, soft tissue)",
+      "Viral infections",
+      "Inflammatory/autoimmune diseases",
+      "Malignancy",
+      "Drug fever"
+    ]
   }
 };
 
-// =========================================================
-// BUILD HISTORY QUESTIONS
-// =========================================================
-const ccSelect = document.getElementById("ccSelect");
+const ccSelect    = document.getElementById("ccSelect");
 const historyArea = document.getElementById("historyArea");
-const output = document.getElementById("output");
+const output      = document.getElementById("output");
 
+// ========================== Build history UI ==========================
 ccSelect.addEventListener("change", () => {
   const key = ccSelect.value;
   historyArea.innerHTML = "";
@@ -201,82 +476,154 @@ ccSelect.addEventListener("change", () => {
   });
 });
 
-// =========================================================
-// GENERATE SOAP + DX SUMMARY
-// =========================================================
-document.getElementById("generateBtn").addEventListener("click", () => {
-  const key = ccSelect.value;
-  if (!key) { alert("Select CC first!"); return; }
+// ========================== Helper: build PI sentence ==========================
+function buildPiSentence(key, tpl, answers, age, sex) {
+  let sexWord = "";
+  if (sex === "M") sexWord = "male";
+  else if (sex === "F") sexWord = "female";
 
-  const tpl = templates[key];
+  let start = "";
+  if (age && sexWord) {
+    start = `${age}-year-old ${sexWord}`;
+  } else if (age) {
+    start = `${age}-year-old patient`;
+  } else if (sexWord) {
+    start = `A ${sexWord} patient`;
+  } else {
+    start = "The patient";
+  }
 
-  // Collect answers
-  const answers = {};
-  tpl.history.forEach(q => {
-    answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
-  });
+  let sentence = `${start} with ${tpl.nameEn}`;
+  if (answers["duration"]) sentence += ` for ${answers["duration"]}`;
+  sentence += ",";
 
-  // Basic info
-  const age = document.getElementById("age").value;
-  const sex = document.getElementById("sex").value;
-
-  const ph = (document.getElementById("ph").value.trim()) || "denied";
-  const allergy = (document.getElementById("allergy").value.trim()) || "NKA";
-  const med = (document.getElementById("med").value.trim()) || "denied";
-  const fh = (document.getElementById("fh").value.trim()) || "no contributory";
-
-  // ------------------- S -------------------
-  let S = "S:\n";
-  S += `CC: ${tpl.nameEn}${answers["duration"] ? " for " + answers["duration"] : ""}\n`;
-  S += `PI:\n${age || ""}${sex || ""}\n`;
-
-  tpl.history.forEach(q => {
-    if (q.id === "duration") return;
-    if (answers[q.id]) S += `- ${q.labelEn}: ${answers[q.id]}.\n`;
-  });
-
-  S += `PH: ${ph}\nAllergy: ${allergy}\nMed: ${med}\nFH: ${fh}\n\n`;
-
-  // ------------------- O -------------------
-  let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
-
-  // ------------------- DDx -------------------
-  let D = "DDx:\n";
-  tpl.ddx.forEach(d => (D += "- " + d + "\n"));
-  D += "\n";
-
-  // ------------------- Dx Summary -------------------
-  let summary = "Dx summary:\n";
+  const fragments = [];
 
   if (key === "sore_throat") {
-    const fever = answers["fever"] || "";
-    const cough = answers["cough"] || "";
-    if (/38|39|40/.test(fever) && /no/i.test(cough)) {
-      summary += "1. Streptococcal pharyngitis possible (fever without cough).\n";
-    } else {
-      summary += "1. Viral pharyngitis most likely.\n";
-    }
-    summary += "2. Observe red flags: trismus, muffled voice, drooling.\n";
+    if (answers["fever"])      fragments.push(`fever up to ${answers["fever"]}`);
+    if (answers["rhinorrhea"]) fragments.push(`${answers["rhinorrhea"]} rhinorrhea`);
+    if (answers["odynophagia"])fragments.push("odynophagia");
+    if (answers["cough"])      fragments.push(`${answers["cough"]} cough`);
+    if (answers["tocc"])       fragments.push(`TOCC: ${answers["tocc"]}`);
+  } else if (key === "fever") {
+    if (answers["max_temp"])   fragments.push(`fever up to ${answers["max_temp"]}`);
+    if (answers["resp"])       fragments.push(`respiratory symptoms: ${answers["resp"]}`);
+    if (answers["gi"])         fragments.push(`GI symptoms: ${answers["gi"]}`);
+    if (answers["urinary"])    fragments.push(`urinary symptoms: ${answers["urinary"]}`);
+    if (answers["travel"])     fragments.push(`travel/TOCC: ${answers["travel"]}`);
+  } else if (key === "abd_pain") {
+    if (answers["location"])   fragments.push(`pain at ${answers["location"]}`);
+    if (answers["character"])  fragments.push(`${answers["character"]} pain`);
+    if (answers["gi"])         fragments.push(`GI symptoms: ${answers["gi"]}`);
+    if (answers["bleed"])      fragments.push(`GI bleeding: ${answers["bleed"]}`);
+    if (answers["urinary"])    fragments.push(`urinary symptoms: ${answers["urinary"]}`);
+    if (answers["gyne"])       fragments.push(`gynecologic history: ${answers["gyne"]}`);
+  } else if (key === "chest_pain") {
+    if (answers["character"])  fragments.push(`${answers["character"]} chest pain`);
+    if (answers["location"])   fragments.push(`at ${answers["location"]}`);
+    if (answers["radiation"])  fragments.push(`radiating to ${answers["radiation"]}`);
+    if (answers["exertion"])   fragments.push(`related to exertion: ${answers["exertion"]}`);
+    if (answers["dyspnea"])    fragments.push(`dyspnea: ${answers["dyspnea"]}`);
+    if (answers["diaphoresis"])fragments.push(`diaphoresis: ${answers["diaphoresis"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["risk"])       fragments.push(`CV risk factors: ${answers["risk"]}`);
+  } else if (key === "sob") {
+    if (answers["exertional"]) fragments.push(`exertional dyspnea: ${answers["exertional"]}`);
+    if (answers["orthopnea"])  fragments.push(`orthopnea/PND: ${answers["orthopnea"]}`);
+    if (answers["cough"])      fragments.push(`cough/sputum: ${answers["cough"]}`);
+    if (answers["wheezing"])   fragments.push(`wheezing: ${answers["wheezing"]}`);
+    if (answers["fever"])      fragments.push(`fever: ${answers["fever"]}`);
+    if (answers["leg_swelling"])fragments.push(`leg swelling: ${answers["leg_swelling"]}`);
+  } else if (key === "headache") {
+    if (answers["onset"])      fragments.push(`onset: ${answers["onset"]}`);
+    if (answers["location"])   fragments.push(`located at ${answers["location"]}`);
+    if (answers["character"])  fragments.push(`${answers["character"]} quality`);
+    if (answers["severity"])   fragments.push(`severity: ${answers["severity"]}`);
+    if (answers["photo"])      fragments.push(`photo/phonophobia: ${answers["photo"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["neuro"])      fragments.push(`neuro deficits: ${answers["neuro"]}`);
+    if (answers["neck"])       fragments.push(`neck stiffness: ${answers["neck"]}`);
+  } else if (key === "dizziness") {
+    if (answers["type"])       fragments.push(`described as ${answers["type"]}`);
+    if (answers["positional"]) fragments.push(`positional: ${answers["positional"]}`);
+    if (answers["hearing"])    fragments.push(`hearing/tinnitus: ${answers["hearing"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["neuro"])      fragments.push(`neuro deficits: ${answers["neuro"]}`);
+    if (answers["cardiac"])    fragments.push(`cardiac history: ${answers["cardiac"]}`);
+  } else if (key === "palpitations") {
+    if (answers["pattern"])    fragments.push(`irregularity: ${answers["pattern"]}`);
+    if (answers["onset"])      fragments.push(`onset/offset: ${answers["onset"]}`);
+    if (answers["triggers"])   fragments.push(`triggers: ${answers["triggers"]}`);
+    if (answers["chest_pain"]) fragments.push(`associated chest discomfort: ${answers["chest_pain"]}`);
+    if (answers["dizziness"])  fragments.push(`dizziness/syncope: ${answers["dizziness"]}`);
+    if (answers["thyroid"])    fragments.push(`thyroid symptoms: ${answers["thyroid"]}`);
+  } else if (key === "cough") {
+    if (answers["productive"]) fragments.push(`cough ${answers["productive"]}`);
+    if (answers["color"])      fragments.push(`sputum color: ${answers["color"]}`);
+    if (answers["fever"])      fragments.push(`fever: ${answers["fever"]}`);
+    if (answers["wheezing"])   fragments.push(`wheezing: ${answers["wheezing"]}`);
+    if (answers["gerd"])       fragments.push(`GERD symptoms: ${answers["gerd"]}`);
+    if (answers["acei"])       fragments.push(`ACEi use: ${answers["acei"]}`);
+    if (answers["smoking"])    fragments.push(`smoking history: ${answers["smoking"]}`);
+  } else if (key === "abd_bloating") {
+    if (answers["pain"])       fragments.push(`with abdominal pain: ${answers["pain"]}`);
+    if (answers["bowel"])      fragments.push(`bowel habit change: ${answers["bowel"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["weight"])     fragments.push(`weight loss: ${answers["weight"]}`);
+    if (answers["ascites_risk"])fragments.push(`liver disease/alcohol: ${answers["ascites_risk"]}`);
+  } else if (key === "diarrhea") {
+    if (answers["frequency"])  fragments.push(`stool frequency: ${answers["frequency"]}`);
+    if (answers["watery"])     fragments.push(`stool character: ${answers["watery"]}`);
+    if (answers["fever"])      fragments.push(`fever: ${answers["fever"]}`);
+    if (answers["abd_pain"])   fragments.push(`abdominal pain: ${answers["abd_pain"]}`);
+    if (answers["dehydrate"])  fragments.push(`dehydration signs: ${answers["dehydrate"]}`);
+    if (answers["travel"])     fragments.push(`travel/food exposure: ${answers["travel"]}`);
+    if (answers["abx"])        fragments.push(`recent antibiotics: ${answers["abx"]}`);
+  } else if (key === "constipation") {
+    if (answers["frequency"])  fragments.push(`stool frequency: ${answers["frequency"]}`);
+    if (answers["hard"])       fragments.push(`hard stool: ${answers["hard"]}`);
+    if (answers["strain"])     fragments.push(`straining: ${answers["strain"]}`);
+    if (answers["blood"])      fragments.push(`blood on stool: ${answers["blood"]}`);
+    if (answers["meds"])       fragments.push(`constipating meds: ${answers["meds"]}`);
+    if (answers["thyroid"])    fragments.push(`hypothyroid symptoms: ${answers["thyroid"]}`);
+  } else if (key === "edema") {
+    if (answers["laterality"]) fragments.push(`edema ${answers["laterality"]}`);
+    if (answers["pain"])       fragments.push(`leg pain/tenderness: ${answers["pain"]}`);
+    if (answers["sob"])        fragments.push(`associated SOB: ${answers["sob"]}`);
+    if (answers["nocturia"])   fragments.push(`nocturia: ${answers["nocturia"]}`);
+    if (answers["hx"])         fragments.push(`cardiac/renal/liver history: ${answers["hx"]}`);
+    if (answers["travel"])     fragments.push(`recent immobilization/travel: ${answers["travel"]}`);
+  } else if (key === "fatigue") {
+    if (answers["sleep"])      fragments.push(`sleep quality: ${answers["sleep"]}`);
+    if (answers["snore"])      fragments.push(`snoring/apnea: ${answers["snore"]}`);
+    if (answers["mood"])       fragments.push(`mood/anhedonia: ${answers["mood"]}`);
+    if (answers["anemia"])     fragments.push(`anemia symptoms: ${answers["anemia"]}`);
+    if (answers["thyroid"])    fragments.push(`thyroid symptoms: ${answers["thyroid"]}`);
+    if (answers["chronic_dz"]) fragments.push(`chronic diseases: ${answers["chronic_dz"]}`);
+  } else if (key === "fuo") {
+    if (answers["pattern"])    fragments.push(`fever pattern: ${answers["pattern"]}`);
+    if (answers["localizing"]) fragments.push(`localizing symptoms: ${answers["localizing"]}`);
+    if (answers["weight"])     fragments.push(`weight loss/night sweats: ${answers["weight"]}`);
+    if (answers["travel"])     fragments.push(`travel/exposure: ${answers["travel"]}`);
+    if (answers["immune"])     fragments.push(`immunocompromised: ${answers["immune"]}`);
+  } else {
+    // fallback：generic
+    Object.keys(answers).forEach(id => {
+      if (id === "duration") return;
+      if (answers[id]) fragments.push(`${id}: ${answers[id]}`);
+    });
   }
 
-  if (key === "abd_pain") {
-    summary += "Abdominal pain ddx depends on location, GI/urinary/gyne symptoms.\n";
-    if (/black|blood|melena/i.test(answers["bleed"] || "")) {
-      summary += "⚠ GI bleeding suspected.\n";
-    }
+  if (fragments.length > 0) {
+    sentence += " " + fragments.join(", ") + ".";
+  } else {
+    sentence += " .";
   }
+  return sentence;
+}
 
-  if (key === "fever") {
-    summary += "Fever ddx includes viral infection, URI, UTI, pneumonia.\n";
-  }
-
-  output.value = S + O + D + summary;
-});
-
-// =========================================================
-// OPEN IN OPENEVIDENCE (SAFE VERSION)
-// =========================================================
-document.getElementById("openEvidenceBtn").addEventListener("click", () => {
+// ========================== Generate SOAP ==========================
+document.getElementById("generateBtn").addEventListener("click", () => {
   const key = ccSelect.value;
   if (!key) { alert("Select CC first"); return; }
 
@@ -287,19 +634,51 @@ document.getElementById("openEvidenceBtn").addEventListener("click", () => {
     answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
   });
 
-  const queryParts = [];
-  queryParts.push(tpl.nameEn);
-  if (answers["duration"]) queryParts.push("for " + answers["duration"]);
-  Object.values(answers).forEach(v => {
-    if (v) queryParts.push(v);
-  });
+  const age = document.getElementById("age").value;
+  const sex = document.getElementById("sex").value;
 
-  const textToCopy = queryParts.join(" | ");
+  const ph  = (document.getElementById("ph").value || "").trim() || "denied";
+  const al  = (document.getElementById("allergy").value || "").trim() || "NKA";
+  const med = (document.getElementById("med").value || "").trim() || "denied";
+  const fh  = (document.getElementById("fh").value || "").trim() || "no contributory";
 
-  // copy to clipboard
-  navigator.clipboard?.writeText(textToCopy);
+  // ----- S -----
+  let S = "S:\n";
+  const ccLine = `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}${answers["duration"] ? " for " + answers["duration"] : ""}`;
+  S += ccLine + "\n";
 
-  alert("已複製問診摘要，到 OpenEvidence 後直接貼上即可。");
+  const piSentence = buildPiSentence(key, tpl, answers, age, sex);
+  S += "PI:\n" + piSentence + "\n";
+
+  S += `PH: ${ph}\nAllergy: ${al}\nMed: ${med}\nFH: ${fh}\n\n`;
+
+  // ----- O -----
+  let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
+
+  // ----- DDx -----
+  let D = "DDx:\n";
+  tpl.ddx.forEach(item => D += "- " + item + "\n");
+
+  output.value = S + O + D;
+});
+
+// ========================== OpenEvidence: copy full SOAP ==========================
+document.getElementById("openEvidenceBtn").addEventListener("click", () => {
+  const text = output.value.trim();
+  if (!text) {
+    alert("請先按『Generate SOAP』產生病例，再送到 OpenEvidence。");
+    return;
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("已將完整病例複製到剪貼簿，開啟 OpenEvidence 後直接貼上即可。");
+    }).catch(() => {
+      alert("無法自動複製，請在本頁手動全選複製後再貼到 OpenEvidence。");
+    });
+  } else {
+    alert("請在本頁手動全選複製後再貼到 OpenEvidence。");
+  }
 
   window.open("https://www.openevidence.com/", "_blank");
 });
