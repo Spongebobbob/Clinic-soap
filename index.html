@@ -37,19 +37,30 @@
       border: 1px solid #555;
       border-radius: 4px;
     }
-    button {
-      padding: 8px 14px;
-      margin-top: 10px;
-      margin-right: 6px;
-      cursor: pointer;
-      border-radius: 4px;
-      border: 1px solid #888;
-      background: #222;
-      color: #f5f5f5;
-    }
-    button:hover {
-      background: #333;
-    }
+button {
+  padding: 8px 14px;
+  margin-top: 10px;
+  margin-right: 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid #888;
+  background: #222;
+  color: #f5f5f5;
+}
+
+button:hover {
+  background: #333;
+}
+
+/* === 新增：性別按鈕 === */
+.sex-btn {
+  margin-left: 6px;
+}
+
+.sex-btn.active {
+  background: #555;
+  border-color: #fff;
+}
     h2 { margin-bottom: 16px; }
     #qrcode {
       margin-top: 8px;
@@ -73,12 +84,10 @@
 <div class="section">
   <strong>Patient Info</strong><br>
   Age: <input id="age" type="number" min="0" max="120" style="width: 60px;">
-  Sex:
-  <select id="sex">
-    <option value="">--</option>
-    <option value="M">Male</option>
-    <option value="F">Female</option>
-  </select>
+Sex:
+<button type="button" class="sex-btn" data-value="M">Male</button>
+<button type="button" class="sex-btn" data-value="F">Female</button>
+<input type="hidden" id="sex">
 </div>
 
 <!-- Past history -->
@@ -472,7 +481,22 @@ const templates = {
 const ccSelect    = document.getElementById("ccSelect");
 const historyArea = document.getElementById("historyArea");
 const output      = document.getElementById("output");
+  
+// ========================== Sex 選擇按鈕 ==========================
+const sexHidden = document.getElementById("sex");
+const sexButtons = document.querySelectorAll(".sex-btn");
 
+sexButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    // 1) 設定隱藏欄位的值
+    sexHidden.value = btn.dataset.value; // "M" or "F"
+
+    // 2) 更新按鈕外觀（只有一個是 active）
+    sexButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+});
+  
 // ========================== Build history UI ==========================
 ccSelect.addEventListener("change", () => {
   const key = ccSelect.value;
