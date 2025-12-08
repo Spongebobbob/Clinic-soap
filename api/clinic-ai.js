@@ -52,7 +52,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-5.1-mini", // 也可以換成 gpt-4.1、gpt-4.1-mini 等
+        model: "gpt-4.1-mini", // 也可以換成 gpt-4.1、gpt-5.1-mini 等
         input: prompt,
         max_output_tokens: 800,
       }),
