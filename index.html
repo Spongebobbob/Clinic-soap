@@ -1125,7 +1125,7 @@ async function callAIWithText(text) {
     return;
   }
 
-  aiStatus.textContent = "AI thinking...";
+  aiStatus.textContent = "Loading...";
   aiResult.textContent = "";
 
   try {
@@ -1154,7 +1154,7 @@ async function callAIWithText(text) {
       return;
     }
 
-    aiStatus.textContent = "AI suggestion:";
+    aiStatus.textContent = "Suggestion:";
     aiResult.textContent = data.answer || "(no content)";
   } catch (e) {
     aiStatus.textContent = "Network or server error.";
