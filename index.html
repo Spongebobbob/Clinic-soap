@@ -1381,11 +1381,33 @@ Here is a clinic SOAP note:
 ${text}
 
 Please:
-1) Rewrite the "PI" section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note.
-2) List likely diagnoses with brief reasoning.
-3) Suggest key physical exams and tests.
-4) Provide initial management plan.`;
 
+1) Rewrite the "PI" (present illness) section into fluent, concise English,
+   as if written by a native internal-medicine physician for a clinic note.
+   - Do NOT invent new clinical facts that are not present in the SOAP.
+   - You may reorder and slightly reorganize information to improve clarity.
+   - Keep it around 3–6 sentences.
+
+2) List likely diagnoses with brief reasoning.
+
+3) Suggest key physical exams and tests.
+
+4) Provide an initial management plan.
+
+Format your answer in plain text with clear headings, like:
+
+Refined PI:
+...
+
+1) Likely diagnoses:
+- ...
+
+2) Key physical exams and tests:
+- ...
+
+3) Initial management plan:
+- ...
+`;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(promptText).then(() => {
       alert("已將 ChatGPT prompt 複製到剪貼簿，開啟 ChatGPT 後直接貼上即可。");
