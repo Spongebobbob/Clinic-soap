@@ -398,26 +398,53 @@ headache: {
 },
 
 
-  // ---- Dizziness / Vertigo ----
-  dizziness: {
-    nameEn: "dizziness",
-    history: [
-      { id:"duration",   labelEn:"Duration",              labelZh:"頭暈多久？" },
-      { id:"type",       labelEn:"type (vertigo/presyncope)",labelZh:"性質（旋轉/快暈倒）？" },
-      { id:"positional", labelEn:"positional",            labelZh:"與體位改變有關？" },
-      { id:"hearing",    labelEn:"hearing loss/tinnitus", labelZh:"聽力改變/耳鳴？" },
-      { id:"nausea",     labelEn:"nausea/vomiting",       labelZh:"噁心/嘔吐？" },
-      { id:"neuro",      labelEn:"neuro deficits",        labelZh:"肢體無力/說話不清？" },
-      { id:"cardiac",    labelEn:"cardiac history",       labelZh:"有心臟病或心律不整？" }
-    ],
-    ddx: [
-      "Benign paroxysmal positional vertigo (BPPV)",
-      "Vestibular neuritis",
-      "Meniere disease",
-      "Orthostatic hypotension",
-      "Cerebellar or brainstem stroke"
-    ]
-  },
+dizziness: {
+  nameEn: "dizziness / vertigo",
+  history: [
+    { id:"type", labelZh:"你說的頭暈是天旋地轉？快要昏倒？還是步態不穩？", labelEn:"type of dizziness" },
+
+    // Onset & timing
+    { id:"onset", labelZh:"什麼時候開始？突然還是漸進？", labelEn:"onset" },
+    { id:"duration", labelZh:"每次暈多久？（秒／分鐘／小時）", labelEn:"duration of episodes" },
+    { id:"pattern", labelZh:"持續性？還是反覆發作？", labelEn:"episodic or continuous" },
+
+    // Trigger
+    { id:"position", labelZh:"是否與姿勢／轉頭／起床有關？", labelEn:"position trigger" },
+
+    // Quality – confirm vertigo
+    { id:"spinning", labelZh:"是否為旋轉感（天旋地轉）？", labelEn:"spinning sensation" },
+
+    // Severity / functional impact
+    { id:"gait", labelZh:"會影響走路或站立嗎？需不需要扶著？", labelEn:"gait instability" },
+
+    // Otologic symptoms
+    { id:"hearing", labelZh:"有沒有耳鳴／聽力下降／耳悶？", labelEn:"auditory symptoms" },
+
+    // Neurologic danger signs
+    { id:"neuro", labelZh:"是否有無力、麻、複視、吞嚥困難？", labelEn:"neurologic symptoms" },
+
+    // Autonomic
+    { id:"nausea", labelZh:"噁心、嘔吐、冒冷汗？", labelEn:"nausea/vomiting" },
+
+    // Cardiovascular / presyncope
+    { id:"cardiac", labelZh:"黑矇、心悸、胸悶？站起來會更暈？", labelEn:"presyncope/cardiac symptoms" },
+
+    // Past medical history relevance
+    { id:"risk", labelZh:"中風、心臟病、糖尿病、高血壓？", labelEn:"stroke/cardiac risk factors" },
+    { id:"uri", labelZh:"最近有感冒／上呼吸道感染？", labelEn:"recent URI" },
+
+    // Medication-related
+    { id:"meds", labelZh:"最近有吃新藥？（降壓、鎮靜劑）", labelEn:"medications" }
+  ],
+
+  ddx: [
+    "Benign paroxysmal positional vertigo (BPPV)",
+    "Vestibular neuritis",
+    "Ménière disease",
+    "Orthostatic hypotension / arrhythmia",
+    "Brainstem or cerebellar stroke"
+  ]
+},
 
   // ---- Palpitations ----
   palpitations: {
@@ -996,12 +1023,20 @@ function buildPiSentence(key, tpl, answers, age, sex) {
     if (answers["systemic"])       fragments.push(`systemic risks: ${answers["systemic"]}`);
 
   } else if (key === "dizziness") {
-    if (answers["type"])       fragments.push(`described as ${answers["type"]}`);
-    if (answers["positional"]) fragments.push(`positional: ${answers["positional"]}`);
-    if (answers["hearing"])    fragments.push(`hearing/tinnitus: ${answers["hearing"]}`);
-    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
-    if (answers["neuro"])      fragments.push(`neuro deficits: ${answers["neuro"]}`);
-    if (answers["cardiac"])    fragments.push(`cardiac history: ${answers["cardiac"]}`);
+    if (answers["type"])      fragments.push(`described as ${answers["type"]}`);
+    if (answers["onset"])     fragments.push(`onset ${answers["onset"]}`);
+    if (answers["duration"])  fragments.push(`episodes lasting ${answers["duration"]}`);
+    if (answers["pattern"])   fragments.push(`course is ${answers["pattern"]}`);
+    if (answers["position"])  fragments.push(`triggered by ${answers["position"]}`);
+    if (answers["spinning"])  fragments.push(`spinning sensation: ${answers["spinning"]}`);
+    if (answers["gait"])      fragments.push(`gait instability: ${answers["gait"]}`);
+    if (answers["hearing"])   fragments.push(`auditory symptoms: ${answers["hearing"]}`);
+    if (answers["nausea"])    fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["neuro"])     fragments.push(`neurologic deficits: ${answers["neuro"]}`);
+    if (answers["cardiac"])   fragments.push(`presyncope/cardiac symptoms: ${answers["cardiac"]}`);
+    if (answers["risk"])      fragments.push(`risk factors: ${answers["risk"]}`);
+    if (answers["uri"])       fragments.push(`recent URI: ${answers["uri"]}`);
+    if (answers["meds"])      fragments.push(`recent medications: ${answers["meds"]}`);
   } else if (key === "palpitations") {
     if (answers["pattern"])    fragments.push(`irregularity: ${answers["pattern"]}`);
     if (answers["onset"])      fragments.push(`onset/offset: ${answers["onset"]}`);
