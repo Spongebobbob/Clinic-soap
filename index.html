@@ -39,6 +39,7 @@
     button {
       padding: 8px 14px;
       margin-top: 10px;
+      margin-right: 6px;
       cursor: pointer;
       border-radius: 4px;
       border: 1px solid #888;
@@ -96,7 +97,10 @@
   <div id="historyArea">Select a chief complaint to begin.</div>
 </div>
 
-<button id="generateBtn">Generate SOAP</button>
+<div class="section">
+  <button id="generateBtn">Generate SOAP + Dx summary</button>
+  <button id="openEvidenceBtn">Open in OpenEvidence</button>
+</div>
 
 <div class="section">
   <strong>Output (copy into HIS):</strong>
@@ -117,7 +121,7 @@ const templates = {
       { id: "tocc", labelEn: "TOCC", labelZh: "接觸史 / 感染接觸者？", type: "text" }
     ],
     ddx: [
-      "Viral pharyngitis (most likely)",
+      "Viral pharyngitis (most likely in typical URI pattern)",
       "Streptococcal pharyngitis",
       "Peritonsillar abscess (if red flags)"
     ]
@@ -164,9 +168,11 @@ const templates = {
 };
 
 // ========================== UI UPDATE ==========================
-const ccSelect = document.getElementById("ccSelect");
-const historyArea = document.getElementById("historyArea");
-const output = document.getElementById("output");
+const ccSelect        = document.getElementById("ccSelect");
+const historyArea     = document.getElementById("historyArea");
+const output          = document.getElementById("output");
+const generateBtn     = document.getElementById("generateBtn");
+const openEvidenceBtn = document.getElementById("openEvidenceBtn");
 
 ccSelect.addEventListener("change", () => {
   const key = ccSelect.value;
@@ -191,52 +197,139 @@ ccSelect.addEventListener("change", () => {
   });
 });
 
-// ========================== GENERATE SOAP ==========================
-document.getElementById("generateBtn").addEventListener("click", () => {
+// ========================== GENERATE SOAP + Dx summary ==========================
+generateBtn.addEventListener("click", () => {
   const key = ccSelect.value;
   if (!key) { alert("Select a chief complaint first"); return; }
 
-  const tpl = templates[key];
-  const age = document.getElementById("age").value;
-  const sex = document.getElementById("sex").value; // M or F
+  const tpl      = templates[key];
+  const age      = document.getElementById("age").value;
+  const sex      = document.getElementById("sex").value; // M / F / ""
+  const ph       = (document.getElementById("ph").value || "").trim();
+  const allergy  = (document.getElementById("allergy").value || "").trim();
+  const med      = (document.getElementById("med").value || "").trim();
+  const fh       = (document.getElementById("fh").value || "").trim();
 
-  // PH / Allergy / Med / FH（有填用填的，沒填用預設）
-  const ph = (document.getElementById("ph").value || "").trim();
-  const allergy = (document.getElementById("allergy").value || "").trim();
-  const med = (document.getElementById("med").value || "").trim();
-  const fh = (document.getElementById("fh").value || "").trim();
+  // 收集問診答案
+  const answers = {};
+  tpl.history.forEach(q => {
+    answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
+  });
 
+  // ---------- S ----------
   let S = "S:\n";
 
-  // CC
-  const duration = document.getElementById("q_duration")?.value || "";
+  const duration = answers["duration"] || "";
   S += `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}${duration ? " for " + duration : ""}\n`;
 
-  // PI
   S += "PI:\n";
-  if (age || sex) S += `${age}${sex}\n`;
+  if (age || sex) S += `${age || ""}${sex || ""}\n`;
 
   tpl.history.forEach(q => {
-    const val = document.getElementById("q_" + q.id)?.value;
-    if (val && q.id !== "duration") {
+    if (q.id === "duration") return;
+    const val = answers[q.id];
+    if (val) {
       S += `- ${q.labelEn}: ${val}.\n`;
     }
   });
 
-  // PH / Allergy / Med / FH
   S += `PH: ${ph || "denied"}\n`;
   S += `Allergy: ${allergy || "NKA"}\n`;
   S += `Med: ${med || "denied"}\n`;
   S += `FH: ${fh || "no contributory"}\n\n`;
 
-  // O
+  // ---------- O ----------
   let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
 
-  // DDx
+  // ---------- DDx ----------
   let D = "DDx:\n";
   tpl.ddx.forEach(item => D += "- " + item + "\n");
+  D += "\n";
 
-  output.value = S + O + D;
+  // ---------- Dx summary（類 OE 風格，簡單 rule-based） ----------
+  let summary = "Dx summary:\n";
+
+  if (key === "sore_throat") {
+    const feverStr = answers["fever"] || "";
+    const coughStr = answers["cough"] || "";
+    const rhinStr  = answers["rhinorrhea"] || "";
+    const hasFever = /[0-9]/.test(feverStr) || /yes/i.test(feverStr);
+    const hasCough = /[a-z]/i.test(coughStr) && !/no/i.test(coughStr);
+    const hasRhin  = /[a-z]/i.test(rhinStr) && !/no/i.test(rhinStr);
+
+    if (hasFever && !hasCough) {
+      summary += "1. Streptococcal or other bacterial pharyngitis: sore throat with fever and minimal cough raises the possibility of bacterial infection.\n";
+      summary += "2. Viral pharyngitis: still possible, especially if rhinorrhea or other URI symptoms are present.\n";
+    } else {
+      summary += "1. Viral pharyngitis: sore throat associated with cough and/or rhinorrhea is most compatible with viral upper respiratory infection.\n";
+      summary += "2. Streptococcal pharyngitis: consider if tonsillar exudate, tender cervical lymphadenopathy, or high fever.\n";
+    }
+    summary += "3. Peritonsillar abscess: less likely currently, but reconsider if patient develops severe unilateral throat pain, trismus, muffled voice, or drooling.\n";
+  }
+
+  if (key === "fever") {
+    const respStr   = answers["resp"] || "";
+    const giStr     = answers["gi"] || "";
+    const urinaryStr= answers["urinary"] || "";
+
+    const hasResp   = /[a-z]/i.test(respStr) && !/no/i.test(respStr);
+    const hasGI     = /[a-z]/i.test(giStr) && !/no/i.test(giStr);
+    const hasUri    = /[a-z]/i.test(urinaryStr) && !/no/i.test(urinaryStr);
+
+    if (hasResp) {
+      summary += "1. Viral upper respiratory infection: fever with respiratory symptoms (e.g., cough, sore throat, rhinorrhea) is most compatible with viral URI.\n";
+      summary += "2. Pneumonia: consider if productive cough, dyspnea, or abnormal lung auscultation.\n";
+    } else if (hasGI) {
+      summary += "1. Acute gastroenteritis: fever with GI symptoms (nausea, vomiting, diarrhea) suggests GI infection.\n";
+    } else if (hasUri) {
+      summary += "1. Urinary tract infection: fever with urinary symptoms suggests UTI or pyelonephritis.\n";
+    } else {
+      summary += "1. Viral infection: current presentation is non-specific; viral etiology is common.\n";
+    }
+    summary += "2. Bacterial infection at other sites should be considered based on further examination and laboratory results.\n";
+  }
+
+  if (key === "abd_pain") {
+    const loc  = answers["location"] || "";
+    const gi   = answers["gi"] || "";
+    const bleed= answers["bleed"] || "";
+    const hasBleed = /black stool|melena|blood|hematochezia/i.test(bleed);
+
+    summary += "1. Gastroenteritis: abdominal pain with GI symptoms such as nausea, vomiting or diarrhea is compatible with acute gastroenteritis.\n";
+    summary += "2. Peptic ulcer disease or gastritis: consider if epigastric pain related to meals or chronic dyspepsia.\n";
+    summary += "3. Appendicitis or localized surgical abdomen: reconsider if pain migrates, localizes (e.g., RLQ), or shows peritoneal signs on exam.\n";
+    if (hasBleed) {
+      summary += "4. GI bleeding: presence of black or bloody stool raises concern for GI bleeding; further evaluation is indicated.\n";
+    }
+    summary += "5. Biliary or renal causes (e.g., cholecystitis, renal colic) and gynecologic causes (in female patients) should be ruled out based on location of pain and associated symptoms.\n";
+  }
+
+  const fullText = S + O + D + summary;
+  output.value = fullText;
+});
+
+// ========================== OpenEvidence link（Plan A） ==========================
+openEvidenceBtn.addEventListener("click", () => {
+  const key = ccSelect.value;
+  if (!key) { alert("Select a chief complaint first"); return; }
+
+  const tpl = templates[key];
+  const answers = {};
+  tpl.history.forEach(q => {
+    answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
+  });
+
+  const parts = [];
+  parts.push(tpl.nameEn);
+  if (answers["duration"]) parts.push(answers["duration"] + " duration");
+  Object.keys(answers).forEach(id => {
+    if (id === "duration") return;
+    if (answers[id]) parts.push(answers[id]);
+  });
+
+  const query = encodeURIComponent(parts.join(" "));
+  const url   = "https://www.openevidence.com/search?q=" + query;
+  window.open(url, "_blank");
 });
 </script>
 
