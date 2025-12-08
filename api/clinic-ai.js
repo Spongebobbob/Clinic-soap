@@ -1,103 +1,85 @@
-export const config = {
-  runtime: "edge",
-};
+// api/clinic-ai.js
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
-};
+export default async function handler(req, res) {
+  // --- CORS 設定，讓 github.io 可以呼叫這個 API ---
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-function jsonResponse(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      ...corsHeaders,
-    },
-  });
-}
-
-export default async function handler(req) {
-  // 處理 CORS preflight
+  // 預檢請求（preflight）
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    res.status(200).end();
+    return;
   }
 
+  // 只接受 POST
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    res.status(405).json({ error: "Method not allowed" });
+    return;
   }
-
-  let body;
-  try {
-    body = await req.json();
-  } catch (e) {
-    return jsonResponse({ error: "Invalid JSON" }, 400);
-  }
-
-  const soap = (body.soap || "").trim();
-  if (!soap) {
-    return jsonResponse({ error: "Missing SOAP text" }, 400);
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return jsonResponse(
-      { error: "Missing OPENAI_API_KEY on server" },
-      500
-    );
-  }
-
-  const prompt = `
-You are an internal medicine and family medicine consultant.
-Here is a clinic SOAP note from a primary care visit:
-
-${soap}
-
-Please:
-1) List likely diagnoses with brief reasoning (3–6 items, most to least likely).
-2) Suggest key focused physical exams and tests that should be considered.
-3) Provide an initial management plan (including red flags that need ER or admission).
-Keep the answer concise and structured.
-`.trim();
 
   try {
+    const { soap } = req.body || {};
+
+    if (!soap || typeof soap !== "string") {
+      res.status(400).json({ error: "Missing 'soap' field in body" });
+      return;
+    }
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      res.status(500).json({ error: "Server missing OPENAI_API_KEY env" });
+      return;
+    }
+
+    const prompt =
+      "You are an internal medicine consultant.\n" +
+      "Here is a clinic SOAP note:\n\n" +
+      soap +
+      "\n\nPlease:\n" +
+      "1) List likely diagnoses with brief reasoning.\n" +
+      "2) Suggest key physical exams and tests.\n" +
+      "3) Provide initial management plan.\n" +
+      "Answer in concise English bullet points.";
+
+    // 呼叫 OpenAI（用 chat completions，最簡單）
     const apiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: "gpt-4.1-mini", // 也可以改成 gpt-5.1-mini，看你專案定價
+        temperature: 0.2,
         messages: [
           {
             role: "system",
             content:
-              "You provide concise and safe clinical suggestions. You do NOT replace the clinician's own judgement.",
+              "You are an expert internal medicine consultant. Be safe and conservative.",
           },
-          { role: "user", content: prompt },
+          {
+            role: "user",
+            content: prompt,
+          },
         ],
       }),
     });
 
     if (!apiResp.ok) {
       const errText = await apiResp.text();
-      return jsonResponse(
-        { error: "OpenAI error", detail: errText },
-        500
-      );
+      res
+        .status(502)
+        .json({ error: "OpenAI API error", detail: errText.slice(0, 500) });
+      return;
     }
 
     const data = await apiResp.json();
-    const answer =
-      data.choices?.[0]?.message?.content?.trim() || "No answer from AI.";
+    const answer = data.choices?.[0]?.message?.content || "";
 
-    return jsonResponse({ answer }, 200);
-  } catch (e) {
-    return jsonResponse(
-      { error: "Network or server error", detail: String(e) },
-      500
-    );
+    res.status(200).json({ answer });
+  } catch (err) {
+    console.error("clinic-ai error:", err);
+    res.status(500).json({ error: "Server error" });
   }
 }
