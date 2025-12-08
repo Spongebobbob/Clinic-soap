@@ -339,28 +339,64 @@ const templates = {
     ]
   },
 
-  // ---- Headache ----
-  headache: {
-    nameEn: "headache",
-    history: [
-      { id:"duration",   labelEn:"Duration",              labelZh:"頭痛多久？" },
-      { id:"onset",      labelEn:"onset (sudden/gradual)",labelZh:"起病（突然/漸進）？" },
-      { id:"location",   labelEn:"location",              labelZh:"部位？" },
-      { id:"character",  labelEn:"character",             labelZh:"性質？（搏動/壓迫）" },
-      { id:"severity",   labelEn:"severity",              labelZh:"嚴重度？" },
-      { id:"photo",      labelEn:"photophobia/phonophobia",labelZh:"怕光/怕吵？" },
-      { id:"nausea",     labelEn:"nausea/vomiting",       labelZh:"噁心/嘔吐？" },
-      { id:"neuro",      labelEn:"neuro deficits",        labelZh:"肢體無力/說話不清？" },
-      { id:"neck",       labelEn:"neck stiffness",        labelZh:"頸部僵硬？" }
-    ],
-    ddx: [
-      "Migraine",
-      "Tension-type headache",
-      "Cluster headache",
-      "Subarachnoid hemorrhage (if thunderclap)",
-      "Meningitis"
-    ]
-  },
+// ---- Headache (full structured template) ----
+headache: {
+  nameEn: "headache",
+  history: [
+    // Onset & timing
+    { id: "onset",          labelEn: "Onset",                     labelZh: "何時開始頭痛？" },
+    { id: "sudden",         labelEn: "Sudden or gradual onset",   labelZh: "突然還是慢慢開始？" },
+    { id: "first_time",     labelEn: "First episode?",            labelZh: "第一次出現？以前也有？" },
+    { id: "pattern",        labelEn: "Pattern (constant/intermittent)", labelZh: "持續或間歇性？" },
+    { id: "worst_time",     labelEn: "Worst time of day",         labelZh: "一天中何時最痛？" },
+
+    // Location
+    { id: "location",       labelEn: "Location",                  labelZh: "痛在哪裡？單側或雙側？" },
+
+    // Quality & severity
+    { id: "quality",        labelEn: "Quality",                   labelZh: "痛的性質？（跳痛、悶痛、壓迫、刺痛…）" },
+    { id: "severity",       labelEn: "Severity (0–10)",           labelZh: "嚴重程度 0–10 分？" },
+
+    // Trigger & relief
+    { id: "trigger",        labelEn: "Triggers",                  labelZh: "什麼會加重？（光、聲、活動…）" },
+    { id: "relief",         labelEn: "Relieving factors",         labelZh: "什麼會緩解？休息？止痛藥？" },
+
+    // Associated symptoms
+    { id: "nausea",         labelEn: "Nausea/vomiting",           labelZh: "有噁心或嘔吐？" },
+    { id: "photophobia",    labelEn: "Photophobia/phonophobia",   labelZh: "畏光畏聲？" },
+    { id: "aura",           labelEn: "Aura/visual disturbance",   labelZh: "閃光、黑點、視力改變？" },
+    { id: "fever",          labelEn: "Fever/neck stiffness",      labelZh: "發燒或頸部僵硬？" },
+    { id: "neuro",          labelEn: "Neuro deficits",            labelZh: "手腳無力、說話困難？" },
+
+    // Radiation
+    { id: "radiation",      labelEn: "Radiation",                 labelZh: "是否放射到脖子、眼睛？" },
+
+    // Past headache history
+    { id: "past_hx",        labelEn: "Previous headache history", labelZh: "以前有類似頭痛？診斷？治療效果？" },
+
+    // Triggers (lifestyle)
+    { id: "lifestyle",      labelEn: "Triggers (stress/sleep/caffeine/alcohol/menstruation)", 
+                             labelZh: "壓力、睡眠、咖啡因、酒精、月經影響？" },
+
+    // Medications
+    { id: "meds",           labelEn: "Meds (new meds, analgesic overuse)", 
+                             labelZh: "新藥？止痛藥使用頻率？反彈頭痛？" },
+
+    // Systemic diseases / risk factors
+    { id: "systemic",       labelEn: "Systemic disease risks",    labelZh: "癌症、免疫低下、懷孕、外傷？" }
+  ],
+  ddx: [
+    "Migraine",
+    "Tension-type headache",
+    "Cluster headache",
+    "SAH (subarachnoid hemorrhage)",
+    "Meningitis",
+    "Brain tumor / increased ICP",
+    "Giant cell arteritis",
+    "Medication-overuse headache"
+  ]
+},
+
 
   // ---- Dizziness / Vertigo ----
   dizziness: {
@@ -931,15 +967,34 @@ function buildPiSentence(key, tpl, answers, age, sex) {
     if (answers["wheezing"])   fragments.push(`wheezing: ${answers["wheezing"]}`);
     if (answers["fever"])      fragments.push(`fever: ${answers["fever"]}`);
     if (answers["leg_swelling"])fragments.push(`leg swelling: ${answers["leg_swelling"]}`);
-  } else if (key === "headache") {
-    if (answers["onset"])      fragments.push(`onset: ${answers["onset"]}`);
-    if (answers["location"])   fragments.push(`located at ${answers["location"]}`);
-    if (answers["character"])  fragments.push(`${answers["character"]} quality`);
-    if (answers["severity"])   fragments.push(`severity: ${answers["severity"]}`);
-    if (answers["photo"])      fragments.push(`photo/phonophobia: ${answers["photo"]}`);
-    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
-    if (answers["neuro"])      fragments.push(`neuro deficits: ${answers["neuro"]}`);
-    if (answers["neck"])       fragments.push(`neck stiffness: ${answers["neck"]}`);
+} else if (key === "headache") {
+    if (answers["onset"])          fragments.push(`onset: ${answers["onset"]}`);
+    if (answers["sudden"])         fragments.push(`onset nature: ${answers["sudden"]}`);
+    if (answers["first_time"])     fragments.push(`first episode: ${answers["first_time"]}`);
+    if (answers["pattern"])        fragments.push(`pattern: ${answers["pattern"]}`);
+    if (answers["worst_time"])     fragments.push(`worst time: ${answers["worst_time"]}`);
+
+    if (answers["location"])       fragments.push(`location: ${answers["location"]}`);
+    if (answers["quality"])        fragments.push(`quality: ${answers["quality"]}`);
+    if (answers["severity"])       fragments.push(`severity: ${answers["severity"]}/10`);
+
+    if (answers["trigger"])        fragments.push(`triggers: ${answers["trigger"]}`);
+    if (answers["relief"])         fragments.push(`relieved by: ${answers["relief"]}`);
+
+    if (answers["nausea"])         fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["photophobia"])    fragments.push(`photophobia/phonophobia: ${answers["photophobia"]}`);
+    if (answers["aura"])           fragments.push(`aura/visual: ${answers["aura"]}`);
+    if (answers["fever"])          fragments.push(`fever/neck stiffness: ${answers["fever"]}`);
+    if (answers["neuro"])          fragments.push(`neuro deficits: ${answers["neuro"]}`);
+
+    if (answers["radiation"])      fragments.push(`radiation: ${answers["radiation"]}`);
+
+    if (answers["past_hx"])        fragments.push(`past headache hx: ${answers["past_hx"]}`);
+    if (answers["lifestyle"])      fragments.push(`lifestyle triggers: ${answers["lifestyle"]}`);
+
+    if (answers["meds"])           fragments.push(`medications: ${answers["meds"]}`);
+    if (answers["systemic"])       fragments.push(`systemic risks: ${answers["systemic"]}`);
+
   } else if (key === "dizziness") {
     if (answers["type"])       fragments.push(`described as ${answers["type"]}`);
     if (answers["positional"]) fragments.push(`positional: ${answers["positional"]}`);
