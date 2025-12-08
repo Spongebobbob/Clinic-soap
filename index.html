@@ -1,421 +1,834 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Clinic SOAP Generator</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      color-scheme: dark;
-    }
     body {
-      margin: 0;
-      padding: 16px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #111;
-      color: #f5f5f5;
+      margin: 20px;
       line-height: 1.5;
+      background: #000;
+      color: #f5f5f5;
     }
-    h1 {
-      font-size: 1.4rem;
-      margin-bottom: 12px;
-    }
+    label { display: block; margin-top: 8px; }
     .section {
       margin-bottom: 16px;
       padding: 12px;
       border-radius: 8px;
-      background: #1b1b1b;
+      background: #111;
       border: 1px solid #333;
     }
-    label {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 0.95rem;
-    }
-    input[type="number"],
-    input[type="text"],
-    textarea,
-    select {
+    textarea {
       width: 100%;
-      padding: 6px 8px;
-      font-size: 0.95rem;
-      border-radius: 6px;
-      border: 1px solid #444;
+      height: 260px;
       background: #111;
       color: #f5f5f5;
-      box-sizing: border-box;
-    }
-    textarea {
-      min-height: 180px;
-      resize: vertical;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 8px;
       white-space: pre-wrap;
+    }
+    select, input {
+      padding: 4px;
+      margin-top: 4px;
+      background: #111;
+      color: #f5f5f5;
+      border: 1px solid #555;
+      border-radius: 4px;
     }
     button {
       padding: 8px 14px;
-      border-radius: 999px;
-      border: none;
-      background: #22c55e;
-      color: #000;
-      font-size: 0.9rem;
-      font-weight: 600;
+      margin-top: 10px;
+      margin-right: 6px;
       cursor: pointer;
-      margin-right: 8px;
-      margin-bottom: 6px;
-    }
-    button.secondary {
-      background: #3b82f6;
-      color: #fff;
-    }
-    button.outline {
-      background: transparent;
-      border: 1px solid #555;
+      border-radius: 4px;
+      border: 1px solid #888;
+      background: #222;
       color: #f5f5f5;
     }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    button:hover {
+      background: #333;
     }
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .row > .col {
-      flex: 1 1 120px;
-    }
-    .hint {
-      font-size: 0.8rem;
-      color: #aaa;
-      margin-top: 4px;
+    h2 { margin-bottom: 16px; }
+    #qrcode {
+      margin-top: 8px;
     }
     pre {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
         "Liberation Mono", "Courier New", monospace;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
     }
   </style>
+  <!-- 用來產生 QR code 的小工具（前端用，安全） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
+
 <body>
-  <h1>Clinic SOAP Generator</h1>
 
-  <!-- Patient basic info -->
-  <div class="section">
-    <div class="row">
-      <div class="col">
-        <label for="age">Age:</label>
-        <input id="age" type="number" min="0" value="30" />
-      </div>
-      <div class="col">
-        <label for="sex">Sex:</label>
-        <select id="sex">
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-      </div>
-    </div>
+<h2>Clinic SOAP Generator</h2>
+
+<!-- Patient Info -->
+<div class="section">
+  <strong>Patient Info</strong><br>
+  Age: <input id="age" type="number" min="0" max="120" style="width: 60px;">
+  Sex:
+  <select id="sex">
+    <option value="">--</option>
+    <option value="M">Male</option>
+    <option value="F">Female</option>
+  </select>
+</div>
+
+<!-- Past history -->
+<div class="section">
+  <strong>Past / Allergy / Med / Family</strong>
+  <label>PH:</label>
+  <input id="ph" type="text" placeholder="預設 denied">
+  <label>Allergy:</label>
+  <input id="allergy" type="text" placeholder="預設 NKA">
+  <label>Med:</label>
+  <input id="med" type="text" placeholder="預設 denied">
+  <label>FH:</label>
+  <input id="fh" type="text" placeholder="預設 no contributory">
+</div>
+
+<!-- Chief complaint -->
+<div class="section">
+  <label>Chief complaint:</label>
+  <select id="ccSelect">
+    <option value="">Select</option>
+
+    <!-- 原本的 -->
+    <option value="sore_throat">Sore throat</option>
+    <option value="fever">Fever / URI</option>
+    <option value="abd_pain">Abdominal pain</option>
+
+    <!-- 內科主訴 -->
+    <option value="chest_pain">Chest pain</option>
+    <option value="sob">Shortness of breath / Dyspnea</option>
+    <option value="headache">Headache</option>
+    <option value="dizziness">Dizziness / Vertigo</option>
+    <option value="palpitations">Palpitations</option>
+    <option value="cough">Cough</option>
+    <option value="abd_bloating">Abdominal bloating / Distension</option>
+    <option value="diarrhea">Diarrhea</option>
+    <option value="constipation">Constipation</option>
+    <option value="edema">Leg swelling / Edema</option>
+    <option value="fatigue">Fatigue</option>
+    <option value="fuo">Fever of unclear source</option>
+  </select>
+</div>
+
+<!-- History questions -->
+<div class="section">
+  <strong>History questions:</strong>
+  <div id="historyArea">Select a chief complaint to begin.</div>
+</div>
+
+<!-- Buttons -->
+<div class="section">
+  <button id="generateBtn">Generate SOAP</button>
+  <button id="openEvidenceBtn">Open in OpenEvidence</button>
+  <button id="chatgptBtn">Open in ChatGPT (PC)</button>
+  <button id="chatgptQrBtn">QR for ChatGPT (mobile)</button>
+  <button id="askAiBtn">Ask AI (silent)</button>
+</div>
+
+<!-- Output -->
+<div class="section">
+  <strong>Output (copy into HIS / OpenEvidence / ChatGPT):</strong>
+  <textarea id="output"></textarea>
+</div>
+
+<!-- AI suggestion -->
+<div class="section">
+  <strong>AI suggestion (hidden consultant):</strong>
+  <div id="aiStatus" style="font-size:0.9em;color:#aaa;margin-top:4px;"></div>
+  <pre id="aiResult" style="margin-top:6px;"></pre>
+</div>
+
+<!-- QR 給手機掃 -->
+<div class="section">
+  <strong>Mobile QR prompt for ChatGPT:</strong>
+  <div style="font-size: 0.9em; color: #aaa;">
+    按上方「QR for ChatGPT (mobile)」，再用手機相機掃描此區域的 QR code，複製文字後貼到 ChatGPT App。
   </div>
+  <div id="qrcode"></div>
+</div>
 
-  <!-- Chief complaint -->
-  <div class="section">
-    <label for="cc">Chief complaint (CC):</label>
-    <select id="cc">
-      <option value="">-- select --</option>
-      <option value="sore_throat">Sore throat</option>
-      <option value="custom">Other (custom)</option>
-    </select>
-    <div id="ccCustomWrap" style="margin-top:8px; display:none;">
-      <label for="ccCustomText">Custom CC (English):</label>
-      <input id="ccCustomText" type="text" placeholder="e.g. Chest pain for 2 hours" />
-    </div>
-  </div>
+<script>
+// ========================== Templates ==========================
+const templates = {
+  // ---- 原本：sore throat / fever / abd pain ----
+  sore_throat: {
+    nameEn: "sore throat",
+    history: [
+      { id:"duration",   labelEn:"Duration",                            labelZh:"症狀多久？（天）" },
+      { id:"fever",      labelEn:"fever up to",                         labelZh:"發燒？最高幾度？" },
+      { id:"rhinorrhea", labelEn:"rhinorrhea",                          labelZh:"流鼻水？鼻塞？" },
+      { id:"odynophagia",labelEn:"odynophagia",                         labelZh:"吞嚥痛？" },
+      { id:"cough",      labelEn:"cough",                               labelZh:"咳嗽？" },
+      { id:"tocc",       labelEn:"TOCC",                                labelZh:"接觸史 / 感染接觸者？" }
+    ],
+    ddx: [
+      "Viral pharyngitis",
+      "Streptococcal pharyngitis",
+      "Peritonsillar abscess"
+    ]
+  },
 
-  <!-- History questions for sore throat -->
-  <div class="section" id="historySoreThroat" style="display:none;">
-    <strong>History questions – sore throat</strong>
+  fever: {
+    nameEn: "fever",
+    history: [
+      { id:"duration", labelEn:"Duration",               labelZh:"發燒多久？" },
+      { id:"max_temp", labelEn:"fever up to",            labelZh:"最高體溫？" },
+      { id:"resp",     labelEn:"respiratory symptoms",   labelZh:"呼吸道症狀？" },
+      { id:"gi",       labelEn:"GI symptoms",            labelZh:"腸胃症狀？" },
+      { id:"urinary",  labelEn:"urinary symptoms",       labelZh:"泌尿症狀？" },
+      { id:"travel",   labelEn:"travel / TOCC",          labelZh:"旅遊史/TOCC？" }
+    ],
+    ddx: [
+      "Viral infection",
+      "Bacterial infection",
+      "UTI",
+      "Pneumonia"
+    ]
+  },
 
-    <label for="duration">症狀多久？（天）</label>
-    <input id="duration" type="number" min="0" value="3" />
+  abd_pain: {
+    nameEn: "abdominal pain",
+    history: [
+      { id:"duration", labelEn:"Duration",         labelZh:"腹痛多久？" },
+      { id:"location", labelEn:"pain location",    labelZh:"部位？" },
+      { id:"character",labelEn:"pain character",   labelZh:"性質？" },
+      { id:"gi",       labelEn:"GI symptoms",      labelZh:"噁心/嘔吐/腹瀉？" },
+      { id:"bleed",    labelEn:"GI bleeding",      labelZh:"黑便/血便？" },
+      { id:"urinary",  labelEn:"urinary symptoms", labelZh:"泌尿症狀？" },
+      { id:"gyne",     labelEn:"gynecologic",      labelZh:"月經/懷孕？（女性）" }
+    ],
+    ddx: [
+      "Gastroenteritis",
+      "Peptic ulcer disease",
+      "Appendicitis",
+      "Cholecystitis",
+      "Renal colic"
+    ]
+  },
 
-    <label for="feverMax">發燒？最高幾度？</label>
-    <input id="feverMax" type="text" placeholder="e.g. 38.5" />
+  // ---- Chest pain ----
+  chest_pain: {
+    nameEn: "chest pain",
+    history: [
+      { id:"duration",   labelEn:"Duration",                 labelZh:"胸痛多久？" },
+      { id:"onset",      labelEn:"onset",                    labelZh:"起病時間/方式？" },
+      { id:"location",   labelEn:"pain location",            labelZh:"部位？" },
+      { id:"character",  labelEn:"pain character",           labelZh:"性質？（壓迫/刺痛/悶痛）" },
+      { id:"radiation",  labelEn:"radiation",                labelZh:"有放散嗎？" },
+      { id:"exertion",   labelEn:"relation to exertion",     labelZh:"勞累相關？" },
+      { id:"dyspnea",    labelEn:"dyspnea",                  labelZh:"喘？" },
+      { id:"diaphoresis",labelEn:"diaphoresis",              labelZh:"冒冷汗？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",          labelZh:"噁心/嘔吐？" },
+      { id:"risk",       labelEn:"CV risk factors",          labelZh:"心血管危險因子？(HTN/DM/DLP/吸菸)" }
+    ],
+    ddx: [
+      "Acute coronary syndrome",
+      "Pulmonary embolism",
+      "Aortic dissection",
+      "Pneumonia or pleuritis",
+      "GERD / esophageal spasm",
+      "Musculoskeletal chest wall pain"
+    ]
+  },
 
-    <label for="cough">咳嗽？</label>
-    <select id="cough">
-      <option value="">-- select --</option>
-      <option value="no">No</option>
-      <option value="dry">Dry cough</option>
-      <option value="productive">Productive</option>
-    </select>
+  // ---- SOB ----
+  sob: {
+    nameEn: "shortness of breath",
+    history: [
+      { id:"duration",   labelEn:"Duration",             labelZh:"喘多久？" },
+      { id:"onset",      labelEn:"onset",                labelZh:"起病時間/方式？" },
+      { id:"exertional", labelEn:"exertional dyspnea",   labelZh:"勞累時會喘？" },
+      { id:"orthopnea",  labelEn:"orthopnea / PND",      labelZh:"平躺喘/夜間陣發性喘？" },
+      { id:"cough",      labelEn:"cough/sputum",         labelZh:"咳嗽/痰？" },
+      { id:"wheezing",   labelEn:"wheezing",             labelZh:"喘鳴？" },
+      { id:"fever",      labelEn:"fever",                labelZh:"發燒？" },
+      { id:"leg_swelling",labelEn:"leg swelling",        labelZh:"下肢水腫？" },
+      { id:"risk",       labelEn:"smoking / cardiac hx", labelZh:"吸菸/心臟病史？" }
+    ],
+    ddx: [
+      "Heart failure",
+      "COPD/asthma exacerbation",
+      "Pneumonia",
+      "Pulmonary embolism",
+      "Anemia"
+    ]
+  },
 
-    <label for="rhino">流鼻水 / 鼻塞？</label>
-    <select id="rhino">
-      <option value="">-- select --</option>
-      <option value="none">No</option>
-      <option value="mild">Mild rhinorrhea / nasal congestion</option>
-      <option value="severe">Severe rhinorrhea / congestion</option>
-    </select>
+  // ---- Headache ----
+  headache: {
+    nameEn: "headache",
+    history: [
+      { id:"duration",   labelEn:"Duration",              labelZh:"頭痛多久？" },
+      { id:"onset",      labelEn:"onset (sudden/gradual)",labelZh:"起病（突然/漸進）？" },
+      { id:"location",   labelEn:"location",              labelZh:"部位？" },
+      { id:"character",  labelEn:"character",             labelZh:"性質？（搏動/壓迫）" },
+      { id:"severity",   labelEn:"severity",              labelZh:"嚴重度？" },
+      { id:"photo",      labelEn:"photophobia/phonophobia",labelZh:"怕光/怕吵？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",       labelZh:"噁心/嘔吐？" },
+      { id:"neuro",      labelEn:"neuro deficits",        labelZh:"肢體無力/說話不清？" },
+      { id:"neck",       labelEn:"neck stiffness",        labelZh:"頸部僵硬？" }
+    ],
+    ddx: [
+      "Migraine",
+      "Tension-type headache",
+      "Cluster headache",
+      "Subarachnoid hemorrhage (if thunderclap)",
+      "Meningitis"
+    ]
+  },
 
-    <label for="odyno">吞嚥痛（odynophagia）？</label>
-    <select id="odyno">
-      <option value="">-- select --</option>
-      <option value="yes">Yes</option>
-      <option value="no">No</option>
-    </select>
+  // ---- Dizziness / Vertigo ----
+  dizziness: {
+    nameEn: "dizziness",
+    history: [
+      { id:"duration",   labelEn:"Duration",              labelZh:"頭暈多久？" },
+      { id:"type",       labelEn:"type (vertigo/presyncope)",labelZh:"性質（旋轉/快暈倒）？" },
+      { id:"positional", labelEn:"positional",            labelZh:"與體位改變有關？" },
+      { id:"hearing",    labelEn:"hearing loss/tinnitus", labelZh:"聽力改變/耳鳴？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",       labelZh:"噁心/嘔吐？" },
+      { id:"neuro",      labelEn:"neuro deficits",        labelZh:"肢體無力/說話不清？" },
+      { id:"cardiac",    labelEn:"cardiac history",       labelZh:"有心臟病或心律不整？" }
+    ],
+    ddx: [
+      "Benign paroxysmal positional vertigo (BPPV)",
+      "Vestibular neuritis",
+      "Meniere disease",
+      "Orthostatic hypotension",
+      "Cerebellar or brainstem stroke"
+    ]
+  },
 
-    <label for="tocc">接觸史 / 感染接觸者？</label>
-    <input id="tocc" type="text" placeholder="e.g. coworker / family / denied" />
-  </div>
+  // ---- Palpitations ----
+  palpitations: {
+    nameEn: "palpitations",
+    history: [
+      { id:"duration",   labelEn:"Duration",                 labelZh:"心悸多久？" },
+      { id:"onset",      labelEn:"onset/offset",             labelZh:"發作怎麼開始/結束？" },
+      { id:"pattern",    labelEn:"pattern",                  labelZh:"規則/不規則？" },
+      { id:"triggers",   labelEn:"triggers (exertion/caffeine/ETOH)",labelZh:"誘發因子（運動/咖啡/酒）？" },
+      { id:"chest_pain", labelEn:"associated chest discomfort",labelZh:"伴隨胸悶/胸痛？" },
+      { id:"dizziness",  labelEn:"dizziness/syncope",        labelZh:"頭暈/暈厥？" },
+      { id:"thyroid",    labelEn:"thyroid symptoms",         labelZh:"甲狀腺症狀？" }
+    ],
+    ddx: [
+      "Supraventricular tachycardia",
+      "Atrial fibrillation",
+      "Premature beats (PAC/PVC)",
+      "Hyperthyroidism",
+      "Anxiety/panic"
+    ]
+  },
 
-  <!-- Custom PI for other CC -->
-  <div class="section" id="historyCustom" style="display:none;">
-    <strong>History – custom</strong>
-    <label for="piCustom">
-      PI (English free text) – you can type directly if not sore throat.
-    </label>
-    <textarea
-      id="piCustom"
-      placeholder="e.g. 45-year-old male with chest pain for 2 hours, retrosternal, non-radiating, not related to exertion..."
-    ></textarea>
-  </div>
+  // ---- Cough ----
+  cough: {
+    nameEn: "cough",
+    history: [
+      { id:"duration",   labelEn:"Duration",          labelZh:"咳嗽多久？" },
+      { id:"productive", labelEn:"productive or dry", labelZh:"有痰/乾咳？" },
+      { id:"color",      labelEn:"sputum color",      labelZh:"痰顏色？" },
+      { id:"fever",      labelEn:"fever",             labelZh:"發燒？" },
+      { id:"wheezing",   labelEn:"wheezing",          labelZh:"喘鳴？" },
+      { id:"gerd",       labelEn:"GERD symptoms",     labelZh:"火燒心/逆流？" },
+      { id:"acei",       labelEn:"ACEi use",          labelZh:"有用ACEI？" },
+      { id:"smoking",    labelEn:"smoking history",   labelZh:"抽菸？" }
+    ],
+    ddx: [
+      "Viral upper respiratory infection",
+      "Acute bronchitis",
+      "Asthma/COPD",
+      "Pneumonia",
+      "GERD-related cough",
+      "ACE inhibitor–induced cough"
+    ]
+  },
 
-  <!-- PH / Allergy / Med / FH -->
-  <div class="section">
-    <strong>Background</strong>
-    <label for="ph">Past history (PH) – optional</label>
-    <input id="ph" type="text" placeholder="empty = denied" />
+  // ---- Abdominal bloating / distension ----
+  abd_bloating: {
+    nameEn: "abdominal bloating",
+    history: [
+      { id:"duration",   labelEn:"Duration",             labelZh:"脹氣/腹脹多久？" },
+      { id:"pain",       labelEn:"abdominal pain",       labelZh:"有腹痛嗎？" },
+      { id:"bowel",      labelEn:"bowel habit change",   labelZh:"排便習慣改變？" },
+      { id:"nausea",     labelEn:"nausea/vomiting",      labelZh:"噁心/嘔吐？" },
+      { id:"weight",     labelEn:"weight loss",          labelZh:"體重減輕？" },
+      { id:"ascites_risk",labelEn:"liver disease/alcohol",labelZh:"肝病/酗酒？" }
+    ],
+    ddx: [
+      "Functional bloating / IBS",
+      "Constipation",
+      "Ascites from liver disease",
+      "Small bowel obstruction",
+      "Ovarian or abdominal mass"
+    ]
+  },
 
-    <label for="allergy">Allergy – optional</label>
-    <input id="allergy" type="text" placeholder="empty = NKA" />
+  // ---- Diarrhea ----
+  diarrhea: {
+    nameEn: "diarrhea",
+    history: [
+      { id:"duration",   labelEn:"Duration",          labelZh:"腹瀉多久？" },
+      { id:"frequency",  labelEn:"stool frequency",   labelZh:"一天幾次？" },
+      { id:"watery",     labelEn:"watery vs bloody",  labelZh:"水瀉還是血便？" },
+      { id:"fever",      labelEn:"fever",             labelZh:"發燒？" },
+      { id:"abd_pain",   labelEn:"abdominal pain",    labelZh:"腹痛？" },
+      { id:"dehydrate",  labelEn:"dehydration signs", labelZh:"口渴/尿量減少？" },
+      { id:"travel",     labelEn:"travel / food history",labelZh:"旅遊史/可疑飲食？" },
+      { id:"abx",        labelEn:"recent antibiotics",labelZh:"近期用抗生素？" }
+    ],
+    ddx: [
+      "Viral gastroenteritis",
+      "Bacterial enteritis / food poisoning",
+      "Clostridioides difficile infection",
+      "Inflammatory bowel disease",
+      "Irritable bowel syndrome"
+    ]
+  },
 
-    <label for="med">Regular medication – optional</label>
-    <input id="med" type="text" placeholder="empty = denied" />
+  // ---- Constipation ----
+  constipation: {
+    nameEn: "constipation",
+    history: [
+      { id:"duration",   labelEn:"Duration",            labelZh:"便祕多久？" },
+      { id:"frequency",  labelEn:"stool frequency",     labelZh:"一週排便幾次？" },
+      { id:"hard",       labelEn:"hard stool",          labelZh:"乾硬糞便？" },
+      { id:"strain",     labelEn:"straining",           labelZh:"用力解便？" },
+      { id:"blood",      labelEn:"blood on stool",      labelZh:"便中血？" },
+      { id:"meds",       labelEn:"constipating meds",   labelZh:"有無便祕相關藥物（opioid等）？" },
+      { id:"thyroid",    labelEn:"hypothyroid symptoms",labelZh:"怕冷、體重增加？" }
+    ],
+    ddx: [
+      "Functional constipation",
+      "Irritable bowel syndrome with constipation",
+      "Medication-induced constipation",
+      "Hypothyroidism",
+      "Colorectal malignancy (if alarm features)"
+    ]
+  },
 
-    <label for="fh">Family history (FH) – optional</label>
-    <input id="fh" type="text" placeholder="empty = no contributory" />
-    <div class="hint">
-      若留白，生成時會自動填入：<br />
-      PH: denied / Allergy: NKA / Med: denied / FH: no contributory
-    </div>
-  </div>
+  // ---- Edema ----
+  edema: {
+    nameEn: "leg swelling",
+    history: [
+      { id:"duration",   labelEn:"Duration",           labelZh:"水腫多久？" },
+      { id:"laterality", labelEn:"unilateral/bilateral",labelZh:"單側還是雙側？" },
+      { id:"pain",       labelEn:"pain/tenderness",    labelZh:"小腿疼痛？" },
+      { id:"sob",        labelEn:"associated SOB",     labelZh:"伴隨喘？" },
+      { id:"nocturia",   labelEn:"nocturia",           labelZh:"夜尿？" },
+      { id:"hx",         labelEn:"cardiac/renal/liver history",labelZh:"心臟/腎臟/肝病史？" },
+      { id:"travel",     labelEn:"recent immobilization/travel",labelZh:"久坐/長途旅行？" }
+    ],
+    ddx: [
+      "Heart failure",
+      "Deep vein thrombosis",
+      "Chronic venous insufficiency",
+      "Nephrotic syndrome",
+      "Cirrhosis with ascites"
+    ]
+  },
 
-  <!-- Buttons -->
-  <div class="section">
-    <button id="generateBtn">Generate SOAP</button>
-    <button id="openEvidenceBtn" class="secondary">Open in OpenEvidence</button>
-    <button id="askAiBtn" class="outline">Ask AI (silent)</button>
-  </div>
+  // ---- Fatigue ----
+  fatigue: {
+    nameEn: "fatigue",
+    history: [
+      { id:"duration",   labelEn:"Duration",               labelZh:"疲倦多久？" },
+      { id:"sleep",      labelEn:"sleep quality",          labelZh:"睡眠品質？" },
+      { id:"snore",      labelEn:"snoring/apnea",          labelZh:"打呼/睡眠呼吸中止？" },
+      { id:"mood",       labelEn:"mood / anhedonia",       labelZh:"心情低落/失去興趣？" },
+      { id:"anemia",     labelEn:"anemia symptoms",        labelZh:"頭暈/心悸/蒼白？" },
+      { id:"thyroid",    labelEn:"thyroid symptoms",       labelZh:"怕冷/體重變化？" },
+      { id:"chronic_dz", labelEn:"chronic medical illness",labelZh:"慢性疾病？" }
+    ],
+    ddx: [
+      "Anemia",
+      "Hypothyroidism",
+      "Depression",
+      "Sleep apnea",
+      "Chronic systemic illness"
+    ]
+  },
 
-  <!-- SOAP output -->
-  <div class="section">
-    <label for="output">Output (copy into HIS):</label>
-    <textarea id="output"></textarea>
-  </div>
+  // ---- FUO / unclear fever ----
+  fuo: {
+    nameEn: "fever of unclear source",
+    history: [
+      { id:"duration",   labelEn:"Duration",              labelZh:"發燒多久？" },
+      { id:"pattern",    labelEn:"fever pattern",         labelZh:"發燒型態？（持續/間歇）" },
+      { id:"localizing", labelEn:"localizing symptoms",   labelZh:"局部症狀？（咳嗽/腹痛/尿痛等）" },
+      { id:"weight",     labelEn:"weight loss/night sweats",labelZh:"體重減輕/盜汗？" },
+      { id:"travel",     labelEn:"travel / exposure",     labelZh:"旅遊史/動物/環境暴露？" },
+      { id:"immune",     labelEn:"immunocompromised",     labelZh:"免疫不全/用類固醇？" }
+    ],
+    ddx: [
+      "Common localized infections (respiratory, urinary, GI, soft tissue)",
+      "Viral infections",
+      "Inflammatory/autoimmune diseases",
+      "Malignancy",
+      "Drug fever"
+    ]
+  }
+};
 
-  <!-- AI result -->
-  <div class="section">
-    <strong>AI suggestion (hidden consultant):</strong>
-    <div id="aiStatus" class="hint"></div>
-    <pre id="aiResult"></pre>
-  </div>
+const ccSelect    = document.getElementById("ccSelect");
+const historyArea = document.getElementById("historyArea");
+const output      = document.getElementById("output");
 
-  <script>
-    const ageInput = document.getElementById("age");
-    const sexSelect = document.getElementById("sex");
-    const ccSelect = document.getElementById("cc");
-    const ccCustomWrap = document.getElementById("ccCustomWrap");
-    const ccCustomText = document.getElementById("ccCustomText");
+// ========================== Build history UI ==========================
+ccSelect.addEventListener("change", () => {
+  const key = ccSelect.value;
+  historyArea.innerHTML = "";
 
-    const historySoreThroat = document.getElementById("historySoreThroat");
-    const historyCustom = document.getElementById("historyCustom");
+  if (!key) {
+    historyArea.textContent = "Select a chief complaint.";
+    return;
+  }
 
-    const durationInput = document.getElementById("duration");
-    const feverMaxInput = document.getElementById("feverMax");
-    const coughSelect = document.getElementById("cough");
-    const rhinoSelect = document.getElementById("rhino");
-    const odynoSelect = document.getElementById("odyno");
-    const toccInput = document.getElementById("tocc");
+  const tpl = templates[key];
+  tpl.history.forEach(q => {
+    const label = document.createElement("label");
+    label.textContent = q.labelZh;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.id = "q_" + q.id;
+    input.style.width = "80%";
+    historyArea.appendChild(label);
+    historyArea.appendChild(input);
+  });
+});
 
-    const phInput = document.getElementById("ph");
-    const allergyInput = document.getElementById("allergy");
-    const medInput = document.getElementById("med");
-    const fhInput = document.getElementById("fh");
+// ========================== Helper: build PI sentence ==========================
+function buildPiSentence(key, tpl, answers, age, sex) {
+  let sexWord = "";
+  if (sex === "M") sexWord = "male";
+  else if (sex === "F") sexWord = "female";
 
-    const output = document.getElementById("output");
+  let start = "";
+  if (age && sexWord) {
+    start = `${age}-year-old ${sexWord}`;
+  } else if (age) {
+    start = `${age}-year-old patient`;
+  } else if (sexWord) {
+    start = `A ${sexWord} patient`;
+  } else {
+    start = "The patient";
+  }
 
-    const generateBtn = document.getElementById("generateBtn");
-    const openEvidenceBtn = document.getElementById("openEvidenceBtn");
-    const askAiBtn = document.getElementById("askAiBtn");
-    const aiStatus = document.getElementById("aiStatus");
-    const aiResult = document.getElementById("aiResult");
+  let sentence = `${start} with ${tpl.nameEn}`;
+  if (answers["duration"]) sentence += ` for ${answers["duration"]}`;
+  sentence += ",";
 
-    // 切換 CC 顯示的問診區塊
-    ccSelect.addEventListener("change", () => {
-      const v = ccSelect.value;
-      historySoreThroat.style.display = v === "sore_throat" ? "block" : "none";
-      historyCustom.style.display = v === "custom" ? "block" : "none";
-      ccCustomWrap.style.display = v === "custom" ? "block" : "none";
+  const fragments = [];
+
+  if (key === "sore_throat") {
+    if (answers["fever"])      fragments.push(`fever up to ${answers["fever"]}`);
+    if (answers["rhinorrhea"]) fragments.push(`${answers["rhinorrhea"]} rhinorrhea`);
+    if (answers["odynophagia"])fragments.push("odynophagia");
+    if (answers["cough"])      fragments.push(`${answers["cough"]} cough`);
+    if (answers["tocc"])       fragments.push(`TOCC: ${answers["tocc"]}`);
+  } else if (key === "fever") {
+    if (answers["max_temp"])   fragments.push(`fever up to ${answers["max_temp"]}`);
+    if (answers["resp"])       fragments.push(`respiratory symptoms: ${answers["resp"]}`);
+    if (answers["gi"])         fragments.push(`GI symptoms: ${answers["gi"]}`);
+    if (answers["urinary"])    fragments.push(`urinary symptoms: ${answers["urinary"]}`);
+    if (answers["travel"])     fragments.push(`travel/TOCC: ${answers["travel"]}`);
+  } else if (key === "abd_pain") {
+    if (answers["location"])   fragments.push(`pain at ${answers["location"]}`);
+    if (answers["character"])  fragments.push(`${answers["character"]} pain`);
+    if (answers["gi"])         fragments.push(`GI symptoms: ${answers["gi"]}`);
+    if (answers["bleed"])      fragments.push(`GI bleeding: ${answers["bleed"]}`);
+    if (answers["urinary"])    fragments.push(`urinary symptoms: ${answers["urinary"]}`);
+    if (answers["gyne"])       fragments.push(`gynecologic history: ${answers["gyne"]}`);
+  } else if (key === "chest_pain") {
+    if (answers["character"])  fragments.push(`${answers["character"]} chest pain`);
+    if (answers["location"])   fragments.push(`at ${answers["location"]}`);
+    if (answers["radiation"])  fragments.push(`radiating to ${answers["radiation"]}`);
+    if (answers["exertion"])   fragments.push(`related to exertion: ${answers["exertion"]}`);
+    if (answers["dyspnea"])    fragments.push(`dyspnea: ${answers["dyspnea"]}`);
+    if (answers["diaphoresis"])fragments.push(`diaphoresis: ${answers["diaphoresis"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["risk"])       fragments.push(`CV risk factors: ${answers["risk"]}`);
+  } else if (key === "sob") {
+    if (answers["exertional"]) fragments.push(`exertional dyspnea: ${answers["exertional"]}`);
+    if (answers["orthopnea"])  fragments.push(`orthopnea/PND: ${answers["orthopnea"]}`);
+    if (answers["cough"])      fragments.push(`cough/sputum: ${answers["cough"]}`);
+    if (answers["wheezing"])   fragments.push(`wheezing: ${answers["wheezing"]}`);
+    if (answers["fever"])      fragments.push(`fever: ${answers["fever"]}`);
+    if (answers["leg_swelling"])fragments.push(`leg swelling: ${answers["leg_swelling"]}`);
+  } else if (key === "headache") {
+    if (answers["onset"])      fragments.push(`onset: ${answers["onset"]}`);
+    if (answers["location"])   fragments.push(`located at ${answers["location"]}`);
+    if (answers["character"])  fragments.push(`${answers["character"]} quality`);
+    if (answers["severity"])   fragments.push(`severity: ${answers["severity"]}`);
+    if (answers["photo"])      fragments.push(`photo/phonophobia: ${answers["photo"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["neuro"])      fragments.push(`neuro deficits: ${answers["neuro"]}`);
+    if (answers["neck"])       fragments.push(`neck stiffness: ${answers["neck"]}`);
+  } else if (key === "dizziness") {
+    if (answers["type"])       fragments.push(`described as ${answers["type"]}`);
+    if (answers["positional"]) fragments.push(`positional: ${answers["positional"]}`);
+    if (answers["hearing"])    fragments.push(`hearing/tinnitus: ${answers["hearing"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["neuro"])      fragments.push(`neuro deficits: ${answers["neuro"]}`);
+    if (answers["cardiac"])    fragments.push(`cardiac history: ${answers["cardiac"]}`);
+  } else if (key === "palpitations") {
+    if (answers["pattern"])    fragments.push(`irregularity: ${answers["pattern"]}`);
+    if (answers["onset"])      fragments.push(`onset/offset: ${answers["onset"]}`);
+    if (answers["triggers"])   fragments.push(`triggers: ${answers["triggers"]}`);
+    if (answers["chest_pain"]) fragments.push(`associated chest discomfort: ${answers["chest_pain"]}`);
+    if (answers["dizziness"])  fragments.push(`dizziness/syncope: ${answers["dizziness"]}`);
+    if (answers["thyroid"])    fragments.push(`thyroid symptoms: ${answers["thyroid"]}`);
+  } else if (key === "cough") {
+    if (answers["productive"]) fragments.push(`cough ${answers["productive"]}`);
+    if (answers["color"])      fragments.push(`sputum color: ${answers["color"]}`);
+    if (answers["fever"])      fragments.push(`fever: ${answers["fever"]}`);
+    if (answers["wheezing"])   fragments.push(`wheezing: ${answers["wheezing"]}`);
+    if (answers["gerd"])       fragments.push(`GERD symptoms: ${answers["gerd"]}`);
+    if (answers["acei"])       fragments.push(`ACEi use: ${answers["acei"]}`);
+    if (answers["smoking"])    fragments.push(`smoking history: ${answers["smoking"]}`);
+  } else if (key === "abd_bloating") {
+    if (answers["pain"])       fragments.push(`with abdominal pain: ${answers["pain"]}`);
+    if (answers["bowel"])      fragments.push(`bowel habit change: ${answers["bowel"]}`);
+    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["weight"])     fragments.push(`weight loss: ${answers["weight"]}`);
+    if (answers["ascites_risk"])fragments.push(`liver disease/alcohol: ${answers["ascites_risk"]}`);
+  } else if (key === "diarrhea") {
+    if (answers["frequency"])  fragments.push(`stool frequency: ${answers["frequency"]}`);
+    if (answers["watery"])     fragments.push(`stool character: ${answers["watery"]}`);
+    if (answers["fever"])      fragments.push(`fever: ${answers["fever"]}`);
+    if (answers["abd_pain"])   fragments.push(`abdominal pain: ${answers["abd_pain"]}`);
+    if (answers["dehydrate"])  fragments.push(`dehydration signs: ${answers["dehydrate"]}`);
+    if (answers["travel"])     fragments.push(`travel/food exposure: ${answers["travel"]}`);
+    if (answers["abx"])        fragments.push(`recent antibiotics: ${answers["abx"]}`);
+  } else if (key === "constipation") {
+    if (answers["frequency"])  fragments.push(`stool frequency: ${answers["frequency"]}`);
+    if (answers["hard"])       fragments.push(`hard stool: ${answers["hard"]}`);
+    if (answers["strain"])     fragments.push(`straining: ${answers["strain"]}`);
+    if (answers["blood"])      fragments.push(`blood on stool: ${answers["blood"]}`);
+    if (answers["meds"])       fragments.push(`constipating meds: ${answers["meds"]}`);
+    if (answers["thyroid"])    fragments.push(`hypothyroid symptoms: ${answers["thyroid"]}`);
+  } else if (key === "edema") {
+    if (answers["laterality"]) fragments.push(`edema ${answers["laterality"]}`);
+    if (answers["pain"])       fragments.push(`leg pain/tenderness: ${answers["pain"]}`);
+    if (answers["sob"])        fragments.push(`associated SOB: ${answers["sob"]}`);
+    if (answers["nocturia"])   fragments.push(`nocturia: ${answers["nocturia"]}`);
+    if (answers["hx"])         fragments.push(`cardiac/renal/liver history: ${answers["hx"]}`);
+    if (answers["travel"])     fragments.push(`recent immobilization/travel: ${answers["travel"]}`);
+  } else if (key === "fatigue") {
+    if (answers["sleep"])      fragments.push(`sleep quality: ${answers["sleep"]}`);
+    if (answers["snore"])      fragments.push(`snoring/apnea: ${answers["snore"]}`);
+    if (answers["mood"])       fragments.push(`mood/anhedonia: ${answers["mood"]}`);
+    if (answers["anemia"])     fragments.push(`anemia symptoms: ${answers["anemia"]}`);
+    if (answers["thyroid"])    fragments.push(`thyroid symptoms: ${answers["thyroid"]}`);
+    if (answers["chronic_dz"]) fragments.push(`chronic diseases: ${answers["chronic_dz"]}`);
+  } else if (key === "fuo") {
+    if (answers["pattern"])    fragments.push(`fever pattern: ${answers["pattern"]}`);
+    if (answers["localizing"]) fragments.push(`localizing symptoms: ${answers["localizing"]}`);
+    if (answers["weight"])     fragments.push(`weight loss/night sweats: ${answers["weight"]}`);
+    if (answers["travel"])     fragments.push(`travel/exposure: ${answers["travel"]}`);
+    if (answers["immune"])     fragments.push(`immunocompromised: ${answers["immune"]}`);
+  } else {
+    Object.keys(answers).forEach(id => {
+      if (id === "duration") return;
+      if (answers[id]) fragments.push(`${id}: ${answers[id]}`);
+    });
+  }
+
+  if (fragments.length > 0) {
+    sentence += " " + fragments.join(", ") + ".";
+  } else {
+    sentence += " .";
+  }
+  return sentence;
+}
+
+// ========================== Generate SOAP ==========================
+document.getElementById("generateBtn").addEventListener("click", () => {
+  const key = ccSelect.value;
+  if (!key) { alert("Select CC first"); return; }
+
+  const tpl = templates[key];
+
+  const answers = {};
+  tpl.history.forEach(q => {
+    answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
+  });
+
+  const age = document.getElementById("age").value;
+  const sex = document.getElementById("sex").value;
+
+  const ph  = (document.getElementById("ph").value || "").trim() || "denied";
+  const al  = (document.getElementById("allergy").value || "").trim() || "NKA";
+  const med = (document.getElementById("med").value || "").trim() || "denied";
+  const fh  = (document.getElementById("fh").value || "").trim() || "no contributory";
+
+  // ----- S -----
+  let S = "S:\n";
+  const ccLine = `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}${answers["duration"] ? " for " + answers["duration"] : ""}`;
+  S += ccLine + "\n";
+
+  const piSentence = buildPiSentence(key, tpl, answers, age, sex);
+  S += "PI:\n" + piSentence + "\n";
+
+  S += `PH: ${ph}\nAllergy: ${al}\nMed: ${med}\nFH: ${fh}\n\n`;
+
+  // ----- O -----
+  let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
+
+  // ----- DDx -----
+  let D = "DDx:\n";
+  tpl.ddx.forEach(item => D += "- " + item + "\n");
+
+  output.value = S + O + D;
+});
+
+// ========================== OpenEvidence: copy full SOAP ==========================
+document.getElementById("openEvidenceBtn").addEventListener("click", () => {
+  const text = output.value.trim();
+  if (!text) {
+    alert("請先按『Generate SOAP』產生病例，再送到 OpenEvidence。");
+    return;
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("已將完整病例複製到剪貼簿，開啟 OpenEvidence 後直接貼上即可。");
+    }).catch(() => {
+      alert("無法自動複製，請在本頁手動全選複製後再貼到 OpenEvidence。");
+    });
+  } else {
+    alert("請在本頁手動全選複製後再貼到 OpenEvidence。");
+  }
+
+  window.open("https://www.openevidence.com/", "_blank");
+});
+
+// ========================== ChatGPT: copy full SOAP （電腦用） ==========================
+document.getElementById("chatgptBtn").addEventListener("click", () => {
+  const text = output.value.trim();
+  if (!text) {
+    alert("請先按『Generate SOAP』產生病例，再送到 ChatGPT。");
+    return;
+  }
+
+  const promptText =
+`You are an internal medicine consultant.
+Here is a clinic SOAP note:
+
+${text}
+
+Please:
+1) List likely diagnoses with brief reasoning.
+2) Suggest key physical exams and tests.
+3) Provide initial management plan.`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(promptText).then(() => {
+      alert("已將 ChatGPT prompt 複製到剪貼簿，開啟 ChatGPT 後直接貼上即可。");
+    }).catch(() => {
+      alert("無法自動複製，請在本頁手動全選複製後再貼到 ChatGPT。");
+    });
+  } else {
+    alert("請在本頁手動複製後再貼到 ChatGPT。");
+  }
+
+  window.open("https://chatgpt.com/", "_blank");
+});
+
+// ========================== ChatGPT mobile：產生 QR code ==========================
+const chatgptQrBtn = document.getElementById("chatgptQrBtn");
+const qrcodeDiv = document.getElementById("qrcode");
+
+chatgptQrBtn.addEventListener("click", () => {
+  const text = output.value.trim();
+  if (!text) {
+    alert("請先按『Generate SOAP』產生病例，再產生 QR。");
+    return;
+  }
+
+  const promptText =
+`You are an internal medicine consultant.
+Here is a clinic SOAP note:
+
+${text}
+
+Please:
+1) List likely diagnoses with brief reasoning.
+2) Suggest key physical exams and tests.
+3) Provide initial management plan.`.trim();
+
+  // 清空舊的 QR
+  qrcodeDiv.innerHTML = "";
+  // 產生新的 QR code
+  new QRCode(qrcodeDiv, {
+    text: promptText,
+    width: 256,
+    height: 256
+  });
+
+  alert("已產生手機用 ChatGPT QR code，請用手機相機掃描此區域。");
+});
+
+// ========================== Ask AI via backend (silent mode) ==========================
+const askAiBtn = document.getElementById("askAiBtn");
+const aiStatus = document.getElementById("aiStatus");
+const aiResult = document.getElementById("aiResult");
+
+const AI_API_URL =
+  "https://clinic-soap-3de15p6bz-brians-projects-7190b7c2.vercel.app/api/clinic-ai";
+
+askAiBtn.addEventListener("click", async () => {
+  const text = output.value.trim();
+  if (!text) {
+    alert("請先按『Generate SOAP』產生病例，再請 AI 給建議。");
+    return;
+  }
+
+  aiStatus.textContent = "AI thinking...";
+  aiResult.textContent = "";
+
+  try {
+    const resp = await fetch(AI_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ soap: text })
     });
 
-    function sexToShort(sex) {
-      return sex === "female" ? "F" : "M";
-    }
-
-    function buildPiSoreThroat() {
-      const age = ageInput.value || "";
-      const sex = sexSelect.value || "male";
-      const sexWord = sex === "female" ? "female" : "male";
-
-      const dur = durationInput.value || "";
-      const fever = feverMaxInput.value.trim();
-      const cough = coughSelect.value;
-      const rh = rhinoSelect.value;
-      const od = odynoSelect.value;
-      const tocc = toccInput.value.trim();
-
-      let sentence = `${age}-year-old ${sexWord} with sore throat`;
-      if (dur) sentence += ` for ${dur} days`;
-
-      const fragments = [];
-
-      if (fever) fragments.push(`fever up to ${fever}°C`);
-      if (rh === "mild") fragments.push("mild rhinorrhea");
-      else if (rh === "severe") fragments.push("severe rhinorrhea / nasal congestion");
-
-      if (od === "yes") fragments.push("odynophagia");
-      if (cough === "no") fragments.push("no cough");
-      else if (cough === "dry") fragments.push("dry cough");
-      else if (cough === "productive") fragments.push("productive cough");
-
-      if (tocc) fragments.push(`TOCC: ${tocc}`);
-
-      if (fragments.length > 0) {
-        sentence += ", " + fragments.join(", ") + ".";
-      } else {
-        sentence += ".";
-      }
-      return sentence;
-    }
-
-    // 產生 SOAP
-    generateBtn.addEventListener("click", () => {
-      const ccType = ccSelect.value;
-      if (!ccType) {
-        alert("請先選擇 CC");
-        return;
-      }
-
-      const age = ageInput.value || "";
-      const sex = sexSelect.value || "male";
-      const sexShort = sexToShort(sex);
-
-      let ccLine = "";
-      let piText = "";
-
-      if (ccType === "sore_throat") {
-        const dur = durationInput.value || "";
-        ccLine = `CC: Sore throat${dur ? " for " + dur + " days" : ""}`;
-        piText = buildPiSoreThroat();
-      } else if (ccType === "custom") {
-        const customCC = ccCustomText.value.trim();
-        ccLine = customCC ? `CC: ${customCC}` : "CC: ";
-        const customPI = document.getElementById("piCustom").value.trim();
-        piText = customPI || "(no PI)";
-      }
-
-      const ph = (phInput.value || "").trim() || "denied";
-      const al = (allergyInput.value || "").trim() || "NKA";
-      const med = (medInput.value || "").trim() || "denied";
-      const fh = (fhInput.value || "").trim() || "no contributory";
-
-      let s = "S:\n";
-      s += ccLine + "\n";
-      s += "PI:\n";
-      if (ccType === "custom" && !piText.startsWith(age)) {
-        // 如果是 custom 而且開頭不是年齡，就幫忙補上 "xx-year-old M/F, ..."
-        const sexWord = sex === "female" ? "female" : "male";
-        s += `${age}-year-old ${sexWord}, ${piText}\n`;
-      } else {
-        s += piText + "\n";
-      }
-      s += `PH: ${ph}\nAllergy: ${al}\nMed: ${med}\nFH: ${fh}\n\n`;
-      s += "O:\nVS: T / BP\nHEENT:\nChest:\n";
-
-      output.value = s;
-    });
-
-    // OpenEvidence：用簡單 query 丟過去
-    openEvidenceBtn.addEventListener("click", () => {
-      const ccType = ccSelect.value;
-      if (!ccType) {
-        alert("請先選擇 CC 並產生 SOAP");
-        return;
-      }
-      const dur = durationInput.value || "";
-      const fever = feverMaxInput.value.trim();
-      const cough = coughSelect.value || "N/A";
-      const rh = rhinoSelect.value || "N/A";
-      const od = odynoSelect.value || "N/A";
-      const tocc = toccInput.value.trim() || "Denied";
-
-      let q = "";
-      if (ccType === "sore_throat") {
-        q =
-          `sore throat | for ${dur || "?"} days | ` +
-          `${fever || "no fever"} | ${cough} | ${rh} | ${od} | ${tocc}`;
-      } else {
-        q = output.value.slice(0, 300); // 其他就直接截 SOAP 前 300 字
-      }
-
-      const url = "https://openevidence.com/?q=" + encodeURIComponent(q);
-      window.open(url, "_blank");
-    });
-
-    // ========================== Ask AI via backend ==========================
-    const AI_API_URL =
-      "https://clinic-soap-3de15p6bz-brians-projects-7190b7c2.vercel.app/api/clinic-ai";
-
-    askAiBtn.addEventListener("click", async () => {
-      const soap = output.value.trim();
-      if (!soap) {
-        alert("請先按『Generate SOAP』產生病例，再請 AI 給建議。");
-        return;
-      }
-
-      aiStatus.textContent = "AI thinking...";
-      aiResult.textContent = "";
-
+    if (!resp.ok) {
+      aiStatus.textContent = "AI error (server side).";
       try {
-        const resp = await fetch(AI_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ soap }),
-        });
-
-        if (!resp.ok) {
-          aiStatus.textContent = "AI error (server side).";
-          try {
-            const errData = await resp.json();
-            aiResult.textContent = JSON.stringify(errData, null, 2);
-          } catch (e) {
-            aiResult.textContent = "";
-          }
-          return;
-        }
-
-        const data = await resp.json();
-        if (data.error) {
-          aiStatus.textContent = "AI error: " + (data.error || "");
-          aiResult.textContent = data.detail || "";
-          return;
-        }
-
-        aiStatus.textContent = "AI suggestion:";
-        aiResult.textContent = data.answer || "(no content)";
+        const errData = await resp.json();
+        aiResult.textContent = JSON.stringify(errData, null, 2);
       } catch (e) {
-        aiStatus.textContent = "Network or server error.";
-        console.error(e);
+        aiResult.textContent = "";
       }
-    });
-  </script>
+      return;
+    }
+
+    const data = await resp.json();
+    if (data.error) {
+      aiStatus.textContent = "AI error: " + (data.error || "");
+      aiResult.textContent = data.detail || "";
+      return;
+    }
+
+    aiStatus.textContent = "AI suggestion:";
+    aiResult.textContent = data.answer || "(no content)";
+  } catch (e) {
+    aiStatus.textContent = "Network or server error.";
+    console.error(e);
+  }
+});
+</script>
+
 </body>
 </html>
