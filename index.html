@@ -172,6 +172,14 @@ Sex:
   <textarea id="output"></textarea>
 </div>
 
+<!-- Free text for AI decision support -->
+<div class="section">
+  <strong>Doctor note (internal use only)</strong>
+  <textarea id="freeAiInput"
+            placeholder="在這裡貼上：上一份病歷、這次回診抽血結果或最新病況摘要…"></textarea>
+  <button id="freeAiBtn">AI 建議（僅供醫師參考）</button>
+</div>
+
 <!-- AI suggestion -->
 <div class="section">
   <strong>Additional considerations:</strong>
@@ -1084,16 +1092,17 @@ const askAiBtn = document.getElementById("askAiBtn");
 const aiStatus = document.getElementById("aiStatus");
 const aiResult = document.getElementById("aiResult");
 
-const AI_API_URL =
-  "https://clinic-soap.vercel.app/api/clinic-ai";
+const AI_API_URL = "https://clinic-soap.vercel.app/api/clinic-ai";
 
-askAiBtn.addEventListener("click", async () => {
-  const text = output.value.trim();
-  if (!text) {
-    alert("請先按『Generate SOAP』產生病例，再請 AI 給建議。");
+// ----------- 共用函式：丟文字給 AI，顯示回覆 -----------
+async function callAIWithText(text) {
+  const clean = (text || "").trim();
+  if (!clean) {
+    alert("沒有內容可送出，請先輸入或產生內容。");
     return;
   }
 
+  // 顯示 loading
   aiStatus.textContent = "AI thinking...";
   aiResult.textContent = "";
 
@@ -1101,7 +1110,7 @@ askAiBtn.addEventListener("click", async () => {
     const resp = await fetch(AI_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ soap: text })
+      body: JSON.stringify({ soap: clean }) // 後端接受 soap，所以仍沿用這個欄位
     });
 
     if (!resp.ok) {
@@ -1116,8 +1125,9 @@ askAiBtn.addEventListener("click", async () => {
     }
 
     const data = await resp.json();
+
     if (data.error) {
-      aiStatus.textContent = "AI error: " + (data.error || "");
+      aiStatus.textContent = "AI error: " + data.error;
       aiResult.textContent = data.detail || "";
       return;
     }
@@ -1127,6 +1137,21 @@ askAiBtn.addEventListener("click", async () => {
   } catch (e) {
     aiStatus.textContent = "Network or server error.";
     console.error(e);
+  }
+}
+
+// ----------- 原本 AI 按鈕：從 SOAP 內容送出 -----------
+askAiBtn.addEventListener("click", () => {
+  const text = output.value.trim();
+  callAIWithText(text);
+});
+
+// ----------- 新增：自由輸入的 AI 按鈕 -----------
+freeAiBtn.addEventListener("click", () => {
+  const text = document.getElementById("freeAiInput").value;
+  callAIWithText(text);
+});
+
   }
 });
 </script>
