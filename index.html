@@ -1372,9 +1372,10 @@ Here is a clinic SOAP note:
 ${text}
 
 Please:
-1) List likely diagnoses with brief reasoning.
-2) Suggest key physical exams and tests.
-3) Provide initial management plan.`;
+1) Rewrite the "PI" section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note.
+2) List likely diagnoses with brief reasoning.
+3) Suggest key physical exams and tests.
+4) Provide initial management plan.`;
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(promptText).then(() => {
