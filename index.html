@@ -163,20 +163,29 @@ Sex:
   <div id="historyArea">Select a chief complaint to begin.</div>
 </div>
 
-  <!-- Past history -->
-<div class="section">
-  <strong>Past / Allergy / Med / Family</strong>
+<!-- Past History -->
+<div class="section" id="pastHistorySection">
+  <h2>Past History</h2>
+
   <label>PH:</label>
-  <input id="ph" type="text" placeholder="預設 denied">
+  <input id="ph" placeholder="預設 denied">
+
+  <label>Surgery:</label>
+  <input id="surgery" placeholder="預設 denied">
+
   <label>Allergy:</label>
-  <input id="allergy" type="text" placeholder="預設 NKA">
+  <input id="allergy" placeholder="預設 NKA">
+
   <label>Med:</label>
-  <input id="med" type="text" placeholder="預設 denied">
+  <input id="med" placeholder="預設 denied">
+
   <label>FH:</label>
-  <input id="fh" type="text" placeholder="預設 no contributory">
+  <input id="fh" placeholder="預設 no contributory">
+
   <label>Social History:</label>
-  <input id="sh" type="text" placeholder="預設 denied alcohol, betel or cigarette">
+  <input id="sh" placeholder="預設 denied alcohol, betel nut, cigarette">
 </div>
+
   
 <!-- Buttons -->
 <div class="section">
@@ -1315,13 +1324,25 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   const age = document.getElementById("age").value;
   const sex = document.getElementById("sex").value;
 
-  // PH / Allergy / Med / FH / Social（含預設值）
-  const ph     = (document.getElementById("ph")?.value     || "").trim() || "denied";
-  const al     = (document.getElementById("allergy")?.value|| "").trim() || "NKA";
-  const surg    = (document.getElementById("surg")?.value  || "").trim() || "denied";
-  const med    = (document.getElementById("med")?.value    || "").trim() || "denied";
-  const fh     = (document.getElementById("fh")?.value     || "").trim() || "no contributory";
-  const social = (document.getElementById("social")?.value || "").trim() || "denied alcohol, betel or cigarette";
+  // ===== Past History Fields =====
+const ph = (document.getElementById("ph").value.trim() || "denied");
+const surgery = (document.getElementById("surgery").value.trim() || "denied");
+const al = (document.getElementById("allergy").value.trim() || "NKA");
+const med = (document.getElementById("med").value.trim() || "denied");
+const fh = (document.getElementById("fh").value.trim() || "no contributory");
+const sh = (document.getElementById("sh").value.trim() || "denied alcohol, betel nut, cigarette");
+
+// ===== Insert into SOAP =====
+let s = "S:\n";
+s += ccLine + "\n\n";
+s += pSentence + "\n\n";
+
+s += `PH: ${ph}\n`;
+s += `Surgery: ${surgery}\n`;
+s += `Allergy: ${al}\n`;
+s += `Med: ${med}\n`;
+s += `FH: ${fh}\n`;
+s += `SH: ${sh}\n\n`;
 
   // ----- S -----
   let S = "S:\n";
