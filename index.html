@@ -1110,9 +1110,10 @@ Please:
 
 
 // ========================== Ask AI via backend (silent mode) ==========================
-const askAiBtn = document.getElementById("askAiBtn");
-const aiStatus = document.getElementById("aiStatus");
-const aiResult = document.getElementById("aiResult");
+const askAiBtn  = document.getElementById("askAiBtn");
+const aiStatus  = document.getElementById("aiStatus");
+const aiResult  = document.getElementById("aiResult");
+const freeAiBtn = document.getElementById("freeAiBtn");
 
 const AI_API_URL = "https://clinic-soap.vercel.app/api/clinic-ai";
 
@@ -1124,7 +1125,6 @@ async function callAIWithText(text) {
     return;
   }
 
-  // 顯示 loading
   aiStatus.textContent = "AI thinking...";
   aiResult.textContent = "";
 
@@ -1132,7 +1132,7 @@ async function callAIWithText(text) {
     const resp = await fetch(AI_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ soap: clean }) // 後端接受 soap，所以仍沿用這個欄位
+      body: JSON.stringify({ soap: clean })   // 後端欄位名稱仍叫 soap
     });
 
     if (!resp.ok) {
@@ -1168,14 +1168,12 @@ askAiBtn.addEventListener("click", () => {
   callAIWithText(text);
 });
 
-// ----------- 新增：自由輸入的 AI 按鈕 -----------
+// ----------- 自由輸入區塊：從 Doctor note 送出 -----------
 freeAiBtn.addEventListener("click", () => {
   const text = document.getElementById("freeAiInput").value;
   callAIWithText(text);
 });
 
-  }
-});
 </script>
 
 </body>
