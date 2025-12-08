@@ -1307,67 +1307,60 @@ function buildPiSentence(key, tpl, answers, age, sex) {
 // ========================== Generate SOAP ==========================
 document.getElementById("generateBtn").addEventListener("click", () => {
   const key = ccSelect.value;
-  if (!key) { 
-    alert("Select CC first"); 
-    return; 
+  if (!key) {
+    alert("Select chief complaint first");
+    return;
   }
 
   const tpl = templates[key];
 
-  // 收集問診答案
+  // ===== History answers =====
   const answers = {};
   tpl.history.forEach(q => {
-    const el = document.getElementById("q_" + q.id);
-    answers[q.id] = (el && el.value ? el.value : "").trim();
+    answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
   });
 
-  // 基本資料
+  // ===== Basic info =====
   const age = document.getElementById("age").value;
-  const sex = document.getElementById("sex").value;
+  // 如果你還是用下拉選單就改成 "sex"
+  const sex = document.getElementById("sexHidden")?.value || "";
 
   // ===== Past History Fields =====
-const ph  = (document.getElementById("ph")?.value || "").trim() || "denied";
-const al  = (document.getElementById("allergy")?.value || "").trim() || "NKA";
-const med = (document.getElementById("med")?.value || "").trim() || "denied";
-const fh  = (document.getElementById("fh")?.value || "").trim() || "no contributory";
-const surg = (document.getElementById("surg")?.value || "").trim() || "denied";
-const sh  = (document.getElementById("sh")?.value || "").trim() || "denied alcohol, betel or cigarette";
+  const ph   = (document.getElementById("ph")?.value || "").trim() || "denied";
+  const al   = (document.getElementById("allergy")?.value || "").trim() || "NKA";
+  const med  = (document.getElementById("med")?.value || "").trim() || "denied";
+  const fh   = (document.getElementById("fh")?.value || "").trim() || "no contributory";
+  const surg = (document.getElementById("surg")?.value || "").trim() || "denied";
+  const sh   = (document.getElementById("sh")?.value || "").trim() ||
+               "denied alcohol, betel or cigarette";
 
+  // ===== S =====
+  let S = "S:\n";
+  const ccLine =
+    `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}` +
+    (answers["duration"] ? ` for ${answers["duration"]}` : "");
+  S += ccLine + "\n\n";
 
-// ===== Insert into SOAP =====
-let s = "S:\n";
-s += ccLine + "\n\n";
-s += pSentence + "\n\n";
+  const piSentence = buildPiSentence(key, tpl, answers, age, sex);
+  S += "PI:\n" + piSentence + "\n\n";
 
-s += `PH: ${ph}\n`;
-s += `Surgery: ${surgery}\n`;
-s += `Allergy: ${al}\n`;
-s += `Med: ${med}\n`;
-s += `FH: ${fh}\n`;
-s += `SH: ${sh}\n\n`;
+  S += `PH: ${ph}\n`;
+  S += `Allergy: ${al}\n`;
+  S += `Med: ${med}\n`;
+  S += `FH: ${fh}\n`;
+  if (surg) {
+    S += `Surgery: ${surg}\n`;
+  }
+  S += `SH: ${sh}\n\n`;
 
-  // ----- S -----
-let S = "S:\n";
-const ccLine = `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}${answers["duration"] ? " for " + answers["duration"] : ""}`;
-S += ccLine + "\n";
+  // ===== O (簡單模板，之後可自己改) =====
+  let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
 
-const piSentence = buildPiSentence(key, tpl, answers, age, sex);
-S += "PI:\n" + piSentence + "\n";
+  // 若你已經刪掉 DDx，就不要再加 D 了
+  const note = S + O;
 
-// Past history block
-S += `PH: ${ph}\nAllergy: ${al}\nMed: ${med}\nFH: ${fh}\n`;
-if (surg) {
-  S += `Surgery: ${surg}\n`;
-}
-S += `SH: ${sh}\n\n`;
-
-  // ----- O -----
-  let O = "O:\nVS: T / BP\nHEENT:\nChest:\nAbdomen:\nExtremities:\n\n";
-
-  // 不再輸出 DDx，僅 S + O
-  output.value = S + O;
+  output.value = note;
 });
-
 
 // ========================== OpenEvidence: copy full SOAP ==========================
 document.getElementById("openEvidenceBtn").addEventListener("click", () => {
