@@ -49,9 +49,7 @@
     button:hover {
       background: #333;
     }
-    h2 {
-      margin-bottom: 16px;
-    }
+    h2 { margin-bottom: 16px; }
   </style>
 </head>
 
@@ -59,6 +57,7 @@
 
 <h2>Clinic SOAP Generator</h2>
 
+<!-- Patient Info -->
 <div class="section">
   <strong>Patient Info</strong><br>
   Age: <input id="age" type="number" min="0" max="120" style="width: 60px;">
@@ -70,18 +69,20 @@
   </select>
 </div>
 
+<!-- Past history group -->
 <div class="section">
-  <strong>Past / Allergy / Med / Family history</strong>
-  <label>PH (past history):</label>
-  <input id="ph" type="text" placeholder="e.g. HTN, DM；留白預設 denied">
+  <strong>Past / Allergy / Med / Family</strong>
+  <label>PH:</label>
+  <input id="ph" type="text" placeholder="預設 denied">
   <label>Allergy:</label>
-  <input id="allergy" type="text" placeholder="留白預設 NKA">
-  <label>Med (regular medication):</label>
-  <input id="med" type="text" placeholder="留白預設 denied">
-  <label>FH (family history):</label>
-  <input id="fh" type="text" placeholder="留白預設 no contributory">
+  <input id="allergy" type="text" placeholder="預設 NKA">
+  <label>Med:</label>
+  <input id="med" type="text" placeholder="預設 denied">
+  <label>FH:</label>
+  <input id="fh" type="text" placeholder="預設 no contributory">
 </div>
 
+<!-- Chief complaint -->
 <div class="section">
   <label>Chief complaint:</label>
   <select id="ccSelect">
@@ -92,87 +93,91 @@
   </select>
 </div>
 
+<!-- History dynamic area -->
 <div class="section">
   <strong>History questions:</strong>
   <div id="historyArea">Select a chief complaint to begin.</div>
 </div>
 
+<!-- Buttons -->
 <div class="section">
   <button id="generateBtn">Generate SOAP + Dx summary</button>
   <button id="openEvidenceBtn">Open in OpenEvidence</button>
 </div>
 
+<!-- Output -->
 <div class="section">
   <strong>Output (copy into HIS):</strong>
   <textarea id="output"></textarea>
 </div>
 
 <script>
-// ========================== TEMPLATE DEFINITIONS ==========================
+// =========================================================
+// TEMPLATES FOR CC
+// =========================================================
 const templates = {
   sore_throat: {
     nameEn: "sore throat",
     history: [
-      { id: "duration", labelEn: "Duration", labelZh: "症狀多久？（天）", type: "text" },
-      { id: "fever", labelEn: "Fever history / maximal temperature", labelZh: "發燒？最高幾度？", type: "text" },
-      { id: "cough", labelEn: "Cough", labelZh: "咳嗽？", type: "text" },
-      { id: "rhinorrhea", labelEn: "Rhinorrhea / nasal congestion", labelZh: "流鼻水？鼻塞？", type: "text" },
-      { id: "odynophagia", labelEn: "Odynophagia", labelZh: "吞嚥痛？", type: "text" },
-      { id: "tocc", labelEn: "TOCC", labelZh: "接觸史 / 感染接觸者？", type: "text" }
+      { id:"duration", labelEn:"Duration", labelZh:"症狀多久？（天）" },
+      { id:"fever", labelEn:"Fever history / maximal temperature", labelZh:"發燒？最高幾度？" },
+      { id:"cough", labelEn:"Cough", labelZh:"咳嗽？" },
+      { id:"rhinorrhea", labelEn:"Rhinorrhea / nasal congestion", labelZh:"流鼻水？鼻塞？" },
+      { id:"odynophagia", labelEn:"Odynophagia", labelZh:"吞嚥痛？" },
+      { id:"tocc", labelEn:"TOCC", labelZh:"接觸史 / 感染接觸者？" }
     ],
     ddx: [
-      "Viral pharyngitis (most likely in typical URI pattern)",
+      "Viral pharyngitis",
       "Streptococcal pharyngitis",
-      "Peritonsillar abscess (if red flags)"
+      "Peritonsillar abscess"
     ]
   },
 
   fever: {
     nameEn: "fever",
     history: [
-      { id: "duration", labelEn: "Duration", labelZh: "發燒多久？", type: "text" },
-      { id: "max_temp", labelEn: "Maximal temperature", labelZh: "最高體溫？", type: "text" },
-      { id: "resp", labelEn: "Respiratory symptoms", labelZh: "呼吸道症狀（咳/痰/喉嚨痛）", type: "text" },
-      { id: "gi", labelEn: "GI symptoms", labelZh: "腸胃症狀（噁心/腹瀉）", type: "text" },
-      { id: "urinary", labelEn: "Urinary symptoms", labelZh: "泌尿症狀（頻尿/解尿痛）", type: "text" },
-      { id: "travel", labelEn: "Travel / TOCC", labelZh: "旅遊史/TOCC", type: "text" }
+      { id:"duration", labelEn:"Duration", labelZh:"發燒多久？" },
+      { id:"max_temp", labelEn:"Maximal temperature", labelZh:"最高體溫？" },
+      { id:"resp", labelEn:"Respiratory symptoms", labelZh:"呼吸道症狀？" },
+      { id:"gi", labelEn:"GI symptoms", labelZh:"腸胃症狀？" },
+      { id:"urinary", labelEn:"Urinary symptoms", labelZh:"泌尿症狀？" },
+      { id:"travel", labelEn:"Travel / TOCC", labelZh:"旅遊史/TOCC？" }
     ],
     ddx: [
       "Viral infection",
       "Bacterial infection",
-      "UTI (if urinary symptoms)",
-      "Pneumonia (if cough/SOB)"
+      "UTI",
+      "Pneumonia"
     ]
   },
 
   abd_pain: {
     nameEn: "abdominal pain",
     history: [
-      { id: "duration", labelEn: "Duration", labelZh: "腹痛多久？", type: "text" },
-      { id: "location", labelEn: "Pain location", labelZh: "部位？", type: "text" },
-      { id: "character", labelEn: "Pain character", labelZh: "性質？（悶痛/絞痛/刺痛）", type: "text" },
-      { id: "gi", labelEn: "GI symptoms", labelZh: "噁心/嘔吐/腹瀉？", type: "text" },
-      { id: "bleed", labelEn: "GI bleeding", labelZh: "黑便/血便？", type: "text" },
-      { id: "urinary", labelEn: "Urinary symptoms", labelZh: "泌尿症狀？", type: "text" },
-      { id: "gyne", labelEn: "Gynecologic history", labelZh: "月經/懷孕可能？", type: "text" }
+      { id:"duration", labelEn:"Duration", labelZh:"腹痛多久？" },
+      { id:"location", labelEn:"Pain location", labelZh:"部位？" },
+      { id:"character", labelEn:"Pain character", labelZh:"性質？" },
+      { id:"gi", labelEn:"GI symptoms", labelZh:"噁心/嘔吐/腹瀉？" },
+      { id:"bleed", labelEn:"GI bleeding", labelZh:"黑便/血便？" },
+      { id:"urinary", labelEn:"Urinary symptoms", labelZh:"泌尿症狀？" },
+      { id:"gyne", labelEn:"Gynecologic", labelZh:"月經/懷孕？（女性）" }
     ],
     ddx: [
       "Gastroenteritis",
       "Peptic ulcer disease",
       "Appendicitis",
       "Cholecystitis",
-      "Renal colic",
-      "Gynecologic causes (if female)"
+      "Renal colic"
     ]
   }
 };
 
-// ========================== UI UPDATE ==========================
-const ccSelect        = document.getElementById("ccSelect");
-const historyArea     = document.getElementById("historyArea");
-const output          = document.getElementById("output");
-const generateBtn     = document.getElementById("generateBtn");
-const openEvidenceBtn = document.getElementById("openEvidenceBtn");
+// =========================================================
+// BUILD HISTORY QUESTIONS
+// =========================================================
+const ccSelect = document.getElementById("ccSelect");
+const historyArea = document.getElementById("historyArea");
+const output = document.getElementById("output");
 
 ccSelect.addEventListener("change", () => {
   const key = ccSelect.value;
@@ -184,12 +189,11 @@ ccSelect.addEventListener("change", () => {
   }
 
   const tpl = templates[key];
-
   tpl.history.forEach(q => {
     const label = document.createElement("label");
     label.textContent = q.labelZh;
     const input = document.createElement("input");
-    input.type = q.type;
+    input.type = "text";
     input.id = "q_" + q.id;
     input.style.width = "80%";
     historyArea.appendChild(label);
@@ -197,139 +201,107 @@ ccSelect.addEventListener("change", () => {
   });
 });
 
-// ========================== GENERATE SOAP + Dx summary ==========================
-generateBtn.addEventListener("click", () => {
+// =========================================================
+// GENERATE SOAP + DX SUMMARY
+// =========================================================
+document.getElementById("generateBtn").addEventListener("click", () => {
   const key = ccSelect.value;
-  if (!key) { alert("Select a chief complaint first"); return; }
+  if (!key) { alert("Select CC first!"); return; }
 
-  const tpl      = templates[key];
-  const age      = document.getElementById("age").value;
-  const sex      = document.getElementById("sex").value; // M / F / ""
-  const ph       = (document.getElementById("ph").value || "").trim();
-  const allergy  = (document.getElementById("allergy").value || "").trim();
-  const med      = (document.getElementById("med").value || "").trim();
-  const fh       = (document.getElementById("fh").value || "").trim();
+  const tpl = templates[key];
 
-  // 收集問診答案
+  // Collect answers
   const answers = {};
   tpl.history.forEach(q => {
     answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
   });
 
-  // ---------- S ----------
+  // Basic info
+  const age = document.getElementById("age").value;
+  const sex = document.getElementById("sex").value;
+
+  const ph = (document.getElementById("ph").value.trim()) || "denied";
+  const allergy = (document.getElementById("allergy").value.trim()) || "NKA";
+  const med = (document.getElementById("med").value.trim()) || "denied";
+  const fh = (document.getElementById("fh").value.trim()) || "no contributory";
+
+  // ------------------- S -------------------
   let S = "S:\n";
-
-  const duration = answers["duration"] || "";
-  S += `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}${duration ? " for " + duration : ""}\n`;
-
-  S += "PI:\n";
-  if (age || sex) S += `${age || ""}${sex || ""}\n`;
+  S += `CC: ${tpl.nameEn}${answers["duration"] ? " for " + answers["duration"] : ""}\n`;
+  S += `PI:\n${age || ""}${sex || ""}\n`;
 
   tpl.history.forEach(q => {
     if (q.id === "duration") return;
-    const val = answers[q.id];
-    if (val) {
-      S += `- ${q.labelEn}: ${val}.\n`;
-    }
+    if (answers[q.id]) S += `- ${q.labelEn}: ${answers[q.id]}.\n`;
   });
 
-  S += `PH: ${ph || "denied"}\n`;
-  S += `Allergy: ${allergy || "NKA"}\n`;
-  S += `Med: ${med || "denied"}\n`;
-  S += `FH: ${fh || "no contributory"}\n\n`;
+  S += `PH: ${ph}\nAllergy: ${allergy}\nMed: ${med}\nFH: ${fh}\n\n`;
 
-  // ---------- O ----------
+  // ------------------- O -------------------
   let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
 
-  // ---------- DDx ----------
+  // ------------------- DDx -------------------
   let D = "DDx:\n";
-  tpl.ddx.forEach(item => D += "- " + item + "\n");
+  tpl.ddx.forEach(d => (D += "- " + d + "\n"));
   D += "\n";
 
-  // ---------- Dx summary（類 OE 風格，簡單 rule-based） ----------
+  // ------------------- Dx Summary -------------------
   let summary = "Dx summary:\n";
 
   if (key === "sore_throat") {
-    const feverStr = answers["fever"] || "";
-    const coughStr = answers["cough"] || "";
-    const rhinStr  = answers["rhinorrhea"] || "";
-    const hasFever = /[0-9]/.test(feverStr) || /yes/i.test(feverStr);
-    const hasCough = /[a-z]/i.test(coughStr) && !/no/i.test(coughStr);
-    const hasRhin  = /[a-z]/i.test(rhinStr) && !/no/i.test(rhinStr);
-
-    if (hasFever && !hasCough) {
-      summary += "1. Streptococcal or other bacterial pharyngitis: sore throat with fever and minimal cough raises the possibility of bacterial infection.\n";
-      summary += "2. Viral pharyngitis: still possible, especially if rhinorrhea or other URI symptoms are present.\n";
+    const fever = answers["fever"] || "";
+    const cough = answers["cough"] || "";
+    if (/38|39|40/.test(fever) && /no/i.test(cough)) {
+      summary += "1. Streptococcal pharyngitis possible (fever without cough).\n";
     } else {
-      summary += "1. Viral pharyngitis: sore throat associated with cough and/or rhinorrhea is most compatible with viral upper respiratory infection.\n";
-      summary += "2. Streptococcal pharyngitis: consider if tonsillar exudate, tender cervical lymphadenopathy, or high fever.\n";
+      summary += "1. Viral pharyngitis most likely.\n";
     }
-    summary += "3. Peritonsillar abscess: less likely currently, but reconsider if patient develops severe unilateral throat pain, trismus, muffled voice, or drooling.\n";
-  }
-
-  if (key === "fever") {
-    const respStr   = answers["resp"] || "";
-    const giStr     = answers["gi"] || "";
-    const urinaryStr= answers["urinary"] || "";
-
-    const hasResp   = /[a-z]/i.test(respStr) && !/no/i.test(respStr);
-    const hasGI     = /[a-z]/i.test(giStr) && !/no/i.test(giStr);
-    const hasUri    = /[a-z]/i.test(urinaryStr) && !/no/i.test(urinaryStr);
-
-    if (hasResp) {
-      summary += "1. Viral upper respiratory infection: fever with respiratory symptoms (e.g., cough, sore throat, rhinorrhea) is most compatible with viral URI.\n";
-      summary += "2. Pneumonia: consider if productive cough, dyspnea, or abnormal lung auscultation.\n";
-    } else if (hasGI) {
-      summary += "1. Acute gastroenteritis: fever with GI symptoms (nausea, vomiting, diarrhea) suggests GI infection.\n";
-    } else if (hasUri) {
-      summary += "1. Urinary tract infection: fever with urinary symptoms suggests UTI or pyelonephritis.\n";
-    } else {
-      summary += "1. Viral infection: current presentation is non-specific; viral etiology is common.\n";
-    }
-    summary += "2. Bacterial infection at other sites should be considered based on further examination and laboratory results.\n";
+    summary += "2. Observe red flags: trismus, muffled voice, drooling.\n";
   }
 
   if (key === "abd_pain") {
-    const loc  = answers["location"] || "";
-    const gi   = answers["gi"] || "";
-    const bleed= answers["bleed"] || "";
-    const hasBleed = /black stool|melena|blood|hematochezia/i.test(bleed);
-
-    summary += "1. Gastroenteritis: abdominal pain with GI symptoms such as nausea, vomiting or diarrhea is compatible with acute gastroenteritis.\n";
-    summary += "2. Peptic ulcer disease or gastritis: consider if epigastric pain related to meals or chronic dyspepsia.\n";
-    summary += "3. Appendicitis or localized surgical abdomen: reconsider if pain migrates, localizes (e.g., RLQ), or shows peritoneal signs on exam.\n";
-    if (hasBleed) {
-      summary += "4. GI bleeding: presence of black or bloody stool raises concern for GI bleeding; further evaluation is indicated.\n";
+    summary += "Abdominal pain ddx depends on location, GI/urinary/gyne symptoms.\n";
+    if (/black|blood|melena/i.test(answers["bleed"] || "")) {
+      summary += "⚠ GI bleeding suspected.\n";
     }
-    summary += "5. Biliary or renal causes (e.g., cholecystitis, renal colic) and gynecologic causes (in female patients) should be ruled out based on location of pain and associated symptoms.\n";
   }
 
-  const fullText = S + O + D + summary;
-  output.value = fullText;
+  if (key === "fever") {
+    summary += "Fever ddx includes viral infection, URI, UTI, pneumonia.\n";
+  }
+
+  output.value = S + O + D + summary;
 });
 
-// ========================== OpenEvidence link（Plan A） ==========================
-openEvidenceBtn.addEventListener("click", () => {
+// =========================================================
+// OPEN IN OPENEVIDENCE (SAFE VERSION)
+// =========================================================
+document.getElementById("openEvidenceBtn").addEventListener("click", () => {
   const key = ccSelect.value;
-  if (!key) { alert("Select a chief complaint first"); return; }
+  if (!key) { alert("Select CC first"); return; }
 
   const tpl = templates[key];
+
   const answers = {};
   tpl.history.forEach(q => {
     answers[q.id] = (document.getElementById("q_" + q.id)?.value || "").trim();
   });
 
-  const parts = [];
-  parts.push(tpl.nameEn);
-  if (answers["duration"]) parts.push(answers["duration"] + " duration");
-  Object.keys(answers).forEach(id => {
-    if (id === "duration") return;
-    if (answers[id]) parts.push(answers[id]);
+  const queryParts = [];
+  queryParts.push(tpl.nameEn);
+  if (answers["duration"]) queryParts.push("for " + answers["duration"]);
+  Object.values(answers).forEach(v => {
+    if (v) queryParts.push(v);
   });
 
-  const query = encodeURIComponent(parts.join(" "));
-  const url   = "https://www.openevidence.com/search?q=" + query;
-  window.open(url, "_blank");
+  const textToCopy = queryParts.join(" | ");
+
+  // copy to clipboard
+  navigator.clipboard?.writeText(textToCopy);
+
+  alert("已複製問診摘要，到 OpenEvidence 後直接貼上即可。");
+
+  window.open("https://www.openevidence.com/", "_blank");
 });
 </script>
 
