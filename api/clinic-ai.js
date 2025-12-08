@@ -37,9 +37,10 @@ export default async function handler(req, res) {
       "Here is a clinic SOAP note:\n\n" +
       soap +
       "\n\nPlease:\n" +
-      "1) List likely diagnoses with brief reasoning.\n" +
-      "2) Suggest key physical exams and tests.\n" +
-      "3) Provide initial management plan.\n" +
+      "1) Rewrite the "PI" (present illness) section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note..\n" +
+      "2) List likely diagnoses with brief reasoning.\n" +
+      "3) Suggest key physical exams and tests.\n" +
+      "4) Provide initial management plan.\n" +
       "Answer in concise English bullet points.";
 
     // 呼叫 OpenAI（用 chat completions，最簡單）
