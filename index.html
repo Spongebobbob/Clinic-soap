@@ -112,49 +112,49 @@ Sex:
 <!-- Chief complaint -->
 <div class="section">
   <label>Chief complaint:</label>
-  <select id="ccSelect">
-    <option value="">Select</option>
+ <select id="chief-complaint">
+  <option value="">Select</option>
 
-    <!-- 原本的 -->
-    <option value="sore_throat">Sore throat</option>
-    <option value="fever">Fever / URI</option>
-    <option value="abd_pain">Abdominal pain</option>
+  <optgroup label="General">
+    <option>Fever / URI</option>
+    <option>Fatigue</option>
+    <option>Body weight loss / Unintentional weight loss</option>
+    <option>Fever of unclear source</option>
+  </optgroup>
 
-    <!-- 內科主訴 -->
-    <option value="chest_pain">Chest pain</option>
-    <option value="sob">Shortness of breath / Dyspnea</option>
-    <option value="headache">Headache</option>
-    <option value="dizziness">Dizziness / Vertigo</option>
-    <option value="palpitations">Palpitations</option>
-    <option value="cough">Cough</option>
-    <option value="abd_bloating">Abdominal bloating / Distension</option>
-    <option value="diarrhea">Diarrhea</option>
-    <option value="constipation">Constipation</option>
-    <option value="edema">Leg swelling / Edema</option>
-    <option value="fatigue">Fatigue</option>
-    <option value="weight_loss">Body weight loss / Unintentional weight loss</option>
-    <option value="fuo">Fever of unclear source</option>
+  <optgroup label="Cardiovascular / Respiratory">
+    <option>Chest pain</option>
+    <option>Palpitations</option>
+    <option>Shortness of breath / Dyspnea</option>
+    <option>Cough</option>
+  </optgroup>
 
-        <!-- Chronic disease follow-up -->
-    <option value="htn_fup">Hypertension follow-up</option>
-    <option value="dm_fup">Diabetes follow-up</option>
-    <option value="lipid_fup">Hyperlipidemia follow-up</option>
-    <option value="med_refill">Medication refill</option>
+  <optgroup label="Neurologic">
+    <option>Headache</option>
+    <option>Dizziness / Vertigo</option>
+  </optgroup>
 
-    <!-- Psych / sleep -->
-    <option value="insomnia">Insomnia</option>
-    <option value="anxiety">Anxiety</option>
-    <option value="depression">Depression</option>
+  <optgroup label="Gastrointestinal">
+    <option>Abdominal pain</option>
+    <option>Abdominal bloating / Distension</option>
+    <option>Diarrhea</option>
+    <option>Constipation</option>
+  </optgroup>
 
-    <!-- GU / skin -->
-    <option value="dysuria">Dysuria / UTI symptoms</option>
-    <option value="vaginal_discharge">Vaginal discharge</option>
-    <option value="rash">Rash / skin lesion</option>
+  <optgroup label="Edema / MSK">
+    <option>Leg swelling / Edema</option>
+  </optgroup>
 
-    <!-- Health check abnormality -->
-    <option value="abnormal_lft">Abnormal liver function</option>
-    <option value="abnormal_renal">Abnormal renal function</option>
-  </select>
+  <optgroup label="Chronic Disease Follow-up">
+    <option>Hypertension follow-up</option>
+    <option>Diabetes follow-up</option>
+    <option>Hyperlipidemia follow-up</option>
+  </optgroup>
+
+  <optgroup label="Health Exam Abnormality">
+    <option>Abnormal health exam / lab abnormality</option>
+  </optgroup>
+</select>
 </div>
 
 <!-- History questions -->
