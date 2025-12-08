@@ -249,24 +249,46 @@ const templates = {
   },
 
   abd_pain: {
-    nameEn: "abdominal pain",
-    history: [
-      { id:"duration", labelEn:"Duration",         labelZh:"腹痛多久？" },
-      { id:"location", labelEn:"pain location",    labelZh:"部位？" },
-      { id:"character",labelEn:"pain character",   labelZh:"性質？" },
-      { id:"gi",       labelEn:"GI symptoms",      labelZh:"噁心/嘔吐/腹瀉？" },
-      { id:"bleed",    labelEn:"GI bleeding",      labelZh:"黑便/血便？" },
-      { id:"urinary",  labelEn:"urinary symptoms", labelZh:"泌尿症狀？" },
-      { id:"gyne",     labelEn:"gynecologic",      labelZh:"月經/懷孕？（女性）" }
-    ],
-    ddx: [
-      "Gastroenteritis",
-      "Peptic ulcer disease",
-      "Appendicitis",
-      "Cholecystitis",
-      "Renal colic"
-    ]
-  },
+  nameEn: "abdominal pain",
+  history: [
+    { id:"duration",   labelEn:"Duration",                labelZh:"腹痛多久？" },
+
+    // P – Provocation / Palliation
+    { id:"provocation",labelEn:"Provocation/Palliation",  labelZh:"什麼會讓疼痛加劇？（動作/食物等）" },
+    { id:"palliation", labelEn:"Palliation",              labelZh:"什麼方法會讓疼痛緩解？（休息/按壓/排便）" },
+
+    // Q – Quality / Quantity
+    { id:"quality",    labelEn:"Pain quality",            labelZh:"疼痛性質？（絞痛/刺痛/悶痛/燒灼/脹痛）" },
+    { id:"pain_score", labelEn:"Pain score",              labelZh:"疼痛程度 0～10 分？" },
+
+    // R – Region / Radiation
+    { id:"location",   labelEn:"Location",                labelZh:"疼痛的位置？" },
+    { id:"radiation",  labelEn:"Radiation",               labelZh:"疼痛會放散到哪裡？（背部/肩膀/腹股溝等）" },
+
+    // S – Severity（可留 pain score）
+    // （已包含上面 pain_score）
+
+    // T – Timing
+    { id:"onset",      labelEn:"Onset/Timing",            labelZh:"何時開始？持續性或間歇性？一天中何時最痛？" },
+
+    // Associated symptoms
+    { id:"gi",         labelEn:"GI symptoms",             labelZh:"噁心/嘔吐/腹瀉？" },
+    { id:"bleed",      labelEn:"GI bleeding",             labelZh:"黑便/血便？" },
+    { id:"urinary",    labelEn:"Urinary symptoms",        labelZh:"泌尿症狀？" },
+    { id:"gyne",       labelEn:"Gynecologic history",     labelZh:"月經/懷孕？（女性）" }
+  ],
+
+  ddx: [
+    "Gastroenteritis",
+    "Peptic ulcer disease",
+    "Appendicitis",
+    "Cholecystitis",
+    "Renal colic",
+    "Pancreatitis",
+    "Ectopic pregnancy (female)"
+  ]
+},
+
 
   // ---- Chest pain ----
   chest_pain: {
@@ -823,13 +845,21 @@ function buildPiSentence(key, tpl, answers, age, sex) {
     if (answers["urinary"])    fragments.push(`urinary symptoms: ${answers["urinary"]}`);
     if (answers["travel"])     fragments.push(`travel/TOCC: ${answers["travel"]}`);
   } else if (key === "abd_pain") {
-    if (answers["location"])   fragments.push(`pain at ${answers["location"]}`);
-    if (answers["character"])  fragments.push(`${answers["character"]} pain`);
-    if (answers["gi"])         fragments.push(`GI symptoms: ${answers["gi"]}`);
-    if (answers["bleed"])      fragments.push(`GI bleeding: ${answers["bleed"]}`);
-    if (answers["urinary"])    fragments.push(`urinary symptoms: ${answers["urinary"]}`);
-    if (answers["gyne"])       fragments.push(`gynecologic history: ${answers["gyne"]}`);
-  } else if (key === "chest_pain") {
+  if (answers["provocation"]) fragments.push(`worse with ${answers["provocation"]}`);
+  if (answers["palliation"])  fragments.push(`relieved by ${answers["palliation"]}`);
+  if (answers["quality"])     fragments.push(`${answers["quality"]} pain`);
+  if (answers["pain_score"])  fragments.push(`pain score ${answers["pain_score"]}/10`);
+
+  if (answers["location"])    fragments.push(`located at ${answers["location"]}`);
+  if (answers["radiation"])   fragments.push(`radiating to ${answers["radiation"]}`);
+
+  if (answers["onset"])       fragments.push(`onset pattern: ${answers["onset"]}`);
+
+  if (answers["gi"])          fragments.push(`GI symptoms: ${answers["gi"]}`);
+  if (answers["bleed"])       fragments.push(`GI bleeding: ${answers["bleed"]}`);
+  if (answers["urinary"])     fragments.push(`urinary symptoms: ${answers["urinary"]}`);
+  if (answers["gyne"])        fragments.push(`gynecologic history: ${answers["gyne"]}`);
+} else if (key === "chest_pain") {
     if (answers["character"])  fragments.push(`${answers["character"]} chest pain`);
     if (answers["location"])   fragments.push(`at ${answers["location"]}`);
     if (answers["radiation"])  fragments.push(`radiating to ${answers["radiation"]}`);
