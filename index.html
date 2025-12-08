@@ -291,30 +291,67 @@ const templates = {
 },
 
 
-  // ---- Chest pain ----
+  // ---- Chest pain（完整版）----
   chest_pain: {
     nameEn: "chest pain",
     history: [
-      { id:"duration",   labelEn:"Duration",                 labelZh:"胸痛多久？" },
-      { id:"onset",      labelEn:"onset",                    labelZh:"起病時間/方式？" },
-      { id:"location",   labelEn:"pain location",            labelZh:"部位？" },
-      { id:"character",  labelEn:"pain character",           labelZh:"性質？（壓迫/刺痛/悶痛）" },
-      { id:"radiation",  labelEn:"radiation",                labelZh:"有放散嗎？" },
-      { id:"exertion",   labelEn:"relation to exertion",     labelZh:"勞累相關？" },
-      { id:"dyspnea",    labelEn:"dyspnea",                  labelZh:"喘？" },
-      { id:"diaphoresis",labelEn:"diaphoresis",              labelZh:"冒冷汗？" },
-      { id:"nausea",     labelEn:"nausea/vomiting",          labelZh:"噁心/嘔吐？" },
-      { id:"risk",       labelEn:"CV risk factors",          labelZh:"心血管危險因子？(HTN/DM/DLP/吸菸)" }
+      // Onset & timing
+      { id:"onset",      labelZh:"什麼時候開始胸痛？突然還是漸進？", labelEn:"onset & timing" },
+      { id:"first_time", labelZh:"第一次發作？以前也有類似胸痛？",   labelEn:"first episode or recurrent" },
+      { id:"pattern",    labelZh:"持續痛還是間歇性？",               labelEn:"constant or intermittent" },
+
+      // Location
+      { id:"location",   labelZh:"疼痛位置（胸口中央／左邊／右邊）？", labelEn:"location" },
+      { id:"depth",      labelZh:"感覺是表層還是深層？",               labelEn:"superficial or deep" },
+
+      // Quality & severity
+      { id:"quality",    labelZh:"疼痛性質（壓迫、緊縮、刺痛、灼熱、撕裂感…）", labelEn:"quality" },
+      { id:"severity",   labelZh:"0–10 分現在幾分？",                         labelEn:"severity (0-10)" },
+
+      // Radiation
+      { id:"radiation",  labelZh:"會不會痛到左手、肩膀、背部或下巴？",   labelEn:"radiation" },
+
+      // Provoking & relieving factors
+      { id:"exertion",   labelZh:"活動／走路／爬樓梯會加重？",         labelEn:"worse with exertion" },
+      { id:"pleuritic",  labelZh:"深呼吸、咳嗽會更痛？",               labelEn:"worse with deep breath / cough" },
+      { id:"rest_relief",labelZh:"休息有沒有比較好？",                 labelEn:"relieved by rest" },
+      { id:"meal_relief",labelZh:"和吃東西或吞嚥有關嗎？",             labelEn:"relation to meals / swallowing" },
+
+      // Associated symptoms
+      { id:"sob",        labelZh:"有沒有呼吸困難？",                   labelEn:"shortness of breath" },
+      { id:"diaphoresis",labelZh:"有沒有冒冷汗？",                     labelEn:"diaphoresis" },
+      { id:"nausea",     labelZh:"有沒有噁心或嘔吐？",                 labelEn:"nausea / vomiting" },
+      { id:"near_syncope",labelZh:"會不會頭暈或快昏倒？",              labelEn:"dizziness / near-syncope" },
+      { id:"cough_hemoptysis",labelZh:"有沒有咳嗽或咳血？",            labelEn:"cough / hemoptysis" },
+      { id:"fever",      labelZh:"有沒有發燒？",                       labelEn:"fever" },
+
+      // Cardiac risk factors
+      { id:"cv_risk",    labelZh:"是否有高血壓、糖尿病、高血脂、抽菸、早發心臟病家族史？", labelEn:"cardiovascular risk factors" },
+
+      // Thromboembolism risk (PE)
+      { id:"pe_risk",    labelZh:"最近有久坐、長途飛行、手術、臥床或下肢腫痛？", labelEn:"PE risk (immobilization, surgery, leg swelling)" },
+
+      // Aortic dissection clues
+      { id:"dissection", labelZh:"是否突然像撕裂般劇痛？是否放射到背部？有高血壓病史？", labelEn:"tearing pain / back radiation / HTN" },
+
+      // GI / MSK clues
+      { id:"gi",         labelZh:"是否有燒灼感、打嗝、胃酸逆流，飯後或躺下更痛？", labelEn:"GERD-like symptoms" },
+      { id:"msk",        labelZh:"按壓胸壁或轉身會不會更痛？",                   labelEn:"reproducible by palpation / movement" },
+
+      // Medication & substances
+      { id:"nitro",      labelZh:"有沒有含用硝酸甘油？效果如何？",               labelEn:"response to nitroglycerin" },
+      { id:"drugs",      labelZh:"最近有沒有使用可卡因或其他興奮劑？",           labelEn:"cocaine / stimulant use" }
     ],
     ddx: [
-      "Acute coronary syndrome",
-      "Pulmonary embolism",
+      "Acute coronary syndrome (unstable angina / myocardial infarction)",
       "Aortic dissection",
-      "Pneumonia or pleuritis",
-      "GERD / esophageal spasm",
-      "Musculoskeletal chest wall pain"
+      "Pulmonary embolism",
+      "Pericarditis / pneumonia / pleuritis",
+      "Gastroesophageal reflux disease",
+      "Costochondritis or musculoskeletal chest wall pain"
     ]
   },
+
 
   // ---- SOB ----
   sob: {
@@ -978,15 +1015,38 @@ function buildPiSentence(key, tpl, answers, age, sex) {
   if (answers["bleed"])       fragments.push(`GI bleeding: ${answers["bleed"]}`);
   if (answers["urinary"])     fragments.push(`urinary symptoms: ${answers["urinary"]}`);
   if (answers["gyne"])        fragments.push(`gynecologic history: ${answers["gyne"]}`);
-} else if (key === "chest_pain") {
-    if (answers["character"])  fragments.push(`${answers["character"]} chest pain`);
-    if (answers["location"])   fragments.push(`at ${answers["location"]}`);
-    if (answers["radiation"])  fragments.push(`radiating to ${answers["radiation"]}`);
-    if (answers["exertion"])   fragments.push(`related to exertion: ${answers["exertion"]}`);
-    if (answers["dyspnea"])    fragments.push(`dyspnea: ${answers["dyspnea"]}`);
-    if (answers["diaphoresis"])fragments.push(`diaphoresis: ${answers["diaphoresis"]}`);
-    if (answers["nausea"])     fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
-    if (answers["risk"])       fragments.push(`CV risk factors: ${answers["risk"]}`);
+  } else if (key === "chest_pain") {
+    if (answers["onset"])       fragments.push(`onset ${answers["onset"]}`);
+    if (answers["first_time"])  fragments.push(`episode pattern: ${answers["first_time"]}`);
+    if (answers["pattern"])     fragments.push(`course is ${answers["pattern"]}`);
+
+    if (answers["location"])    fragments.push(`located at ${answers["location"]}`);
+    if (answers["depth"])       fragments.push(`pain feels ${answers["depth"]}`);
+    if (answers["quality"])     fragments.push(`${answers["quality"]} chest pain`);
+    if (answers["severity"])    fragments.push(`severity ${answers["severity"]}/10`);
+
+    if (answers["radiation"])   fragments.push(`radiating to ${answers["radiation"]}`);
+
+    if (answers["exertion"])    fragments.push(`worsened by exertion: ${answers["exertion"]}`);
+    if (answers["pleuritic"])   fragments.push(`pleuritic component: ${answers["pleuritic"]}`);
+    if (answers["rest_relief"]) fragments.push(`relieved by rest: ${answers["rest_relief"]}`);
+    if (answers["meal_relief"]) fragments.push(`relation to meals/swallowing: ${answers["meal_relief"]}`);
+
+    if (answers["sob"])         fragments.push(`associated SOB: ${answers["sob"]}`);
+    if (answers["diaphoresis"]) fragments.push(`diaphoresis: ${answers["diaphoresis"]}`);
+    if (answers["nausea"])      fragments.push(`nausea/vomiting: ${answers["nausea"]}`);
+    if (answers["near_syncope"])fragments.push(`dizziness/near-syncope: ${answers["near_syncope"]}`);
+    if (answers["cough_hemoptysis"]) fragments.push(`cough/hemoptysis: ${answers["cough_hemoptysis"]}`);
+    if (answers["fever"])       fragments.push(`fever: ${answers["fever"]}`);
+
+    if (answers["cv_risk"])     fragments.push(`CV risk factors: ${answers["cv_risk"]}`);
+    if (answers["pe_risk"])     fragments.push(`PE risk: ${answers["pe_risk"]}`);
+    if (answers["dissection"])  fragments.push(`aortic dissection clues: ${answers["dissection"]}`);
+    if (answers["gi"])          fragments.push(`GI features: ${answers["gi"]}`);
+    if (answers["msk"])         fragments.push(`MSK chest wall tenderness/movement related: ${answers["msk"]}`);
+
+    if (answers["nitro"])       fragments.push(`response to nitroglycerin: ${answers["nitro"]}`);
+    if (answers["drugs"])       fragments.push(`substance use (cocaine/stimulant): ${answers["drugs"]}`);
   } else if (key === "sob") {
     if (answers["exertional"]) fragments.push(`exertional dyspnea: ${answers["exertional"]}`);
     if (answers["orthopnea"])  fragments.push(`orthopnea/PND: ${answers["orthopnea"]}`);
