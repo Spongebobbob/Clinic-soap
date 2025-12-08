@@ -114,6 +114,26 @@ Sex:
     <option value="edema">Leg swelling / Edema</option>
     <option value="fatigue">Fatigue</option>
     <option value="fuo">Fever of unclear source</option>
+
+        <!-- Chronic disease follow-up -->
+    <option value="htn_fup">Hypertension follow-up</option>
+    <option value="dm_fup">Diabetes follow-up</option>
+    <option value="lipid_fup">Hyperlipidemia follow-up</option>
+    <option value="med_refill">Medication refill</option>
+
+    <!-- Psych / sleep -->
+    <option value="insomnia">Insomnia</option>
+    <option value="anxiety">Anxiety</option>
+    <option value="depression">Depression</option>
+
+    <!-- GU / skin -->
+    <option value="dysuria">Dysuria / UTI symptoms</option>
+    <option value="vaginal_discharge">Vaginal discharge</option>
+    <option value="rash">Rash / skin lesion</option>
+
+    <!-- Health check abnormality -->
+    <option value="abnormal_lft">Abnormal liver function</option>
+    <option value="abnormal_renal">Abnormal renal function</option>
   </select>
 </div>
 
@@ -477,6 +497,221 @@ const templates = {
       "Malignancy",
       "Drug fever"
     ]
+  },
+
+  // ---- Chronic disease follow-up ----
+  htn_fup: {
+    nameEn: "hypertension follow-up",
+    history: [
+      { id:"duration",  labelEn:"Duration since diagnosis", labelZh:"高血壓診斷多久？" },
+      { id:"home_bp",   labelEn:"Home BP",                  labelZh:"居家血壓大約多少？" },
+      { id:"meds_now",  labelEn:"Current meds",             labelZh:"目前使用哪些降壓藥？" },
+      { id:"adherence", labelEn:"Adherence",                labelZh:"服藥規律嗎？會不會忘記吃？" },
+      { id:"symptoms",  labelEn:"Symptoms",                 labelZh:"有無頭暈、胸悶、視力模糊等症狀？" }
+    ],
+    ddx: [
+      "Well-controlled essential hypertension",
+      "Uncontrolled hypertension",
+      "Drug-related hypotension or dizziness",
+      "Secondary hypertension"
+    ]
+  },
+
+  dm_fup: {
+    nameEn: "diabetes follow-up",
+    history: [
+      { id:"duration",  labelEn:"Duration since diagnosis", labelZh:"糖尿病診斷多久？" },
+      { id:"home_glu",  labelEn:"Home glucose",             labelZh:"居家血糖大約多少？" },
+      { id:"a1c",       labelEn:"Last HbA1c",               labelZh:"最近一次 HbA1c？" },
+      { id:"meds_now",  labelEn:"Current meds",             labelZh:"目前使用哪些降糖藥/胰島素？" },
+      { id:"adherence", labelEn:"Adherence",                labelZh:"服藥/打針是否規律？" },
+      { id:"symptoms",  labelEn:"Symptoms",                 labelZh:"有無多尿、多飲、體重變化、視力模糊、麻木？" }
+    ],
+    ddx: [
+      "Well-controlled type 2 diabetes",
+      "Suboptimally controlled diabetes",
+      "Hypoglycemia risk",
+      "Diabetic complications (neuropathy, nephropathy, retinopathy)"
+    ]
+  },
+
+  lipid_fup: {
+    nameEn: "hyperlipidemia follow-up",
+    history: [
+      { id:"duration",   labelEn:"Duration",             labelZh:"高血脂診斷多久？" },
+      { id:"lipid_val",  labelEn:"Recent lipid profile", labelZh:"最近血脂數值（TC/LDL/TG/HDL）？" },
+      { id:"meds_now",   labelEn:"Current statin/meds",  labelZh:"目前使用哪些降脂藥？" },
+      { id:"adherence",  labelEn:"Adherence",            labelZh:"服藥是否規律？" },
+      { id:"muscle_sx",  labelEn:"Muscle symptoms",      labelZh:"有無肌肉痠痛、無力？" },
+      { id:"lifestyle",  labelEn:"Lifestyle",            labelZh:"飲食習慣、運動情形？" }
+    ],
+    ddx: [
+      "Well-controlled dyslipidemia",
+      "Uncontrolled dyslipidemia",
+      "Statin-associated muscle symptoms",
+      "Metabolic syndrome"
+    ]
+  },
+
+  med_refill: {
+    nameEn: "medication refill",
+    history: [
+      { id:"chronic_dz", labelEn:"Chronic diseases",   labelZh:"主要慢性病有哪些？（高血壓、糖尿病、高血脂…）" },
+      { id:"control",    labelEn:"Disease control",    labelZh:"自覺控制情形如何？" },
+      { id:"side_fx",    labelEn:"Side effects",       labelZh:"用藥後有無不舒服或副作用？" },
+      { id:"adherence",  labelEn:"Adherence",          labelZh:"服藥是否規律？" }
+    ],
+    ddx: [
+      "Stable chronic disease on long-term medication",
+      "Suboptimal adherence to medication",
+      "Medication side effect"
+    ]
+  },
+
+  // ---- Psych / sleep ----
+  insomnia: {
+    nameEn: "insomnia",
+    history: [
+      { id:"duration",  labelEn:"Duration",            labelZh:"睡不好多久了？" },
+      { id:"type",      labelEn:"Type",                labelZh:"主要是入睡困難、中途醒，還是太早醒？" },
+      { id:"hours",     labelEn:"Sleep hours",         labelZh:"平均一晚睡幾小時？" },
+      { id:"day_fx",    labelEn:"Daytime function",    labelZh:"白天精神、專注力如何？" },
+      { id:"psych",     labelEn:"Mood/anxiety",        labelZh:"最近心情、焦慮、壓力狀況？" },
+      { id:"substance", labelEn:"Caffeine/alcohol",    labelZh:"咖啡因、茶、能量飲料、酒精使用情形？" }
+    ],
+    ddx: [
+      "Primary insomnia",
+      "Insomnia related to anxiety or depression",
+      "Poor sleep hygiene",
+      "Substance-related insomnia (caffeine, alcohol)"
+    ]
+  },
+
+  anxiety: {
+    nameEn: "anxiety",
+    history: [
+      { id:"duration",  labelEn:"Duration",                labelZh:"焦慮/緊張多久了？" },
+      { id:"worry",     labelEn:"Main worries",            labelZh:"主要在擔心什麼事情？" },
+      { id:"somatic",   labelEn:"Physical symptoms",       labelZh:"心悸、胸悶、喘、發抖、腸胃不適等？" },
+      { id:"triggers",  labelEn:"Triggers",                labelZh:"有無特定誘發情境/壓力源？" },
+      { id:"sleep",     labelEn:"Sleep",                   labelZh:"對睡眠有無影響？" },
+      { id:"function",  labelEn:"Functional impairment",   labelZh:"是否影響工作、人際或日常生活？" }
+    ],
+    ddx: [
+      "Generalized anxiety disorder",
+      "Adjustment disorder with anxiety",
+      "Panic disorder",
+      "Somatic symptom related disorder"
+    ]
+  },
+
+  depression: {
+    nameEn: "depressive symptoms",
+    history: [
+      { id:"duration",  labelEn:"Duration",              labelZh:"心情低落/沒興趣多久了？" },
+      { id:"mood",      labelEn:"Mood",                  labelZh:"心情大部分時間如何？" },
+      { id:"anhedonia", labelEn:"Loss of interest",      labelZh:"以前有興趣的事情現在還有興趣嗎？" },
+      { id:"bio",       labelEn:"Sleep/appetite/energy", labelZh:"睡眠、食慾、體重、精神體力的變化？" },
+      { id:"guilt",     labelEn:"Guilt/worthlessness",   labelZh:"是否常覺得自己沒用或罪惡？" },
+      { id:"si",        labelEn:"Suicidal ideation",     labelZh:"有沒有出現不想活、想傷害自己的念頭？" }
+    ],
+    ddx: [
+      "Major depressive disorder",
+      "Adjustment disorder with depressed mood",
+      "Persistent depressive disorder",
+      "Depression secondary to medical illness"
+    ]
+  },
+
+  // ---- GU / skin ----
+  dysuria: {
+    nameEn: "dysuria / UTI symptoms",
+    history: [
+      { id:"duration",  labelEn:"Duration",          labelZh:"排尿疼痛/頻尿多久了？" },
+      { id:"frequency", labelEn:"Frequency/urgency", labelZh:"小便是否頻繁、急迫？" },
+      { id:"fever",     labelEn:"Fever/chills",      labelZh:"有無發燒、寒顫？" },
+      { id:"flank",     labelEn:"Flank pain",        labelZh:"有無側腹/腰痛？" },
+      { id:"hematuria", labelEn:"Hematuria",         labelZh:"有沒有血尿？" },
+      { id:"sex",       labelEn:"Sexual history",    labelZh:"最近性行為情形？新伴侶？" }
+    ],
+    ddx: [
+      "Acute uncomplicated cystitis",
+      "Pyelonephritis",
+      "Urethritis / STI",
+      "Noninfectious irritation"
+    ]
+  },
+
+  vaginal_discharge: {
+    nameEn: "vaginal discharge",
+    history: [
+      { id:"duration",  labelEn:"Duration",            labelZh:"分泌物異常多久？" },
+      { id:"character", labelEn:"Color/odor/amount",   labelZh:"顏色、氣味、量如何？" },
+      { id:"sx",        labelEn:"Itching/pain",        labelZh:"有無搔癢、疼痛、性交痛？" },
+      { id:"bleeding",  labelEn:"Bleeding",            labelZh:"有無異常出血？" },
+      { id:"sex",       labelEn:"Sexual history",      labelZh:"最近性行為/新性伴侶？保險套使用？" },
+      { id:"lmp",       labelEn:"LMP / pregnancy risk",labelZh:"最近一次月經、是否可能懷孕？" }
+    ],
+    ddx: [
+      "Vulvovaginal candidiasis",
+      "Bacterial vaginosis",
+      "Trichomoniasis",
+      "Cervicitis / STI"
+    ]
+  },
+
+  rash: {
+    nameEn: "rash / skin lesion",
+    history: [
+      { id:"duration",  labelEn:"Duration",            labelZh:"皮疹/紅疹多久了？" },
+      { id:"location",  labelEn:"Location",            labelZh:"分布在哪些部位？" },
+      { id:"character", labelEn:"Character",           labelZh:"性質（紅、丘疹、水泡、脫屑等）？" },
+      { id:"itch",      labelEn:"Itch/pain",           labelZh:"是否癢或痛？" },
+      { id:"trigger",   labelEn:"Trigger/exposure",    labelZh:"是否接觸新藥物、食物、清潔用品或戶外活動？" },
+      { id:"systemic",  labelEn:"Systemic symptoms",   labelZh:"有無發燒、關節痛、全身不適？" }
+    ],
+    ddx: [
+      "Allergic/contact dermatitis",
+      "Eczema",
+      "Urticaria",
+      "Drug eruption",
+      "Viral exanthem"
+    ]
+  },
+
+  // ---- Health check abnormality ----
+  abnormal_lft: {
+    nameEn: "abnormal liver function from health check",
+    history: [
+      { id:"duration",  labelEn:"Duration",           labelZh:"第一次發現肝功能異常是什麼時候？" },
+      { id:"values",    labelEn:"AST/ALT/others",     labelZh:"肝功能數值（AST/ALT、GGT 等）？" },
+      { id:"symptoms",  labelEn:"Symptoms",           labelZh:"有無黃疸、倦怠、腹痛、噁心？" },
+      { id:"alcohol",   labelEn:"Alcohol use",        labelZh:"平常喝酒頻率與量？" },
+      { id:"meds_herb", labelEn:"Meds/herbs/supp",    labelZh:"近期是否有新藥物、中草藥或保健品？" },
+      { id:"risk",      labelEn:"Viral hepatitis risk",labelZh:"是否有輸血史、針頭暴露、家族B/C肝？" }
+    ],
+    ddx: [
+      "Nonalcoholic fatty liver disease",
+      "Alcohol-related liver injury",
+      "Drug-induced liver injury",
+      "Chronic viral hepatitis"
+    ]
+  },
+
+  abnormal_renal: {
+    nameEn: "abnormal renal function from health check",
+    history: [
+      { id:"duration",  labelEn:"Duration / trend",      labelZh:"腎功能異常多久？有無過去檢查趨勢？" },
+      { id:"values",    labelEn:"Cr/eGFR/UA/protein",    labelZh:"肌酐、eGFR、尿蛋白/尿潛血數值？" },
+      { id:"sx",        labelEn:"Symptoms",              labelZh:"有無水腫、泡泡尿、尿量改變、噁心？" },
+      { id:"htn_dm",    labelEn:"HTN/DM history",        labelZh:"是否有高血壓、糖尿病病史？" },
+      { id:"nephrotox", labelEn:"Nephrotoxic meds/NSAID",labelZh:"是否常用止痛藥（NSAID）或其他腎毒性藥物？" }
+    ],
+    ddx: [
+      "Chronic kidney disease related to hypertension or diabetes",
+      "Acute kidney injury (medication or volume related)",
+      "Primary glomerular disease"
+    ]
   }
 };
 
@@ -652,6 +887,87 @@ function buildPiSentence(key, tpl, answers, age, sex) {
     if (answers["weight"])     fragments.push(`weight loss/night sweats: ${answers["weight"]}`);
     if (answers["travel"])     fragments.push(`travel/exposure: ${answers["travel"]}`);
     if (answers["immune"])     fragments.push(`immunocompromised: ${answers["immune"]}`);
+    } else if (key === "htn_fup") {
+    if (answers["home_bp"])   fragments.push(`home BP around ${answers["home_bp"]}`);
+    if (answers["meds_now"])  fragments.push(`on antihypertensive meds: ${answers["meds_now"]}`);
+    if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
+    if (answers["symptoms"])  fragments.push(`symptoms: ${answers["symptoms"]}`);
+
+  } else if (key === "dm_fup") {
+    if (answers["home_glu"])  fragments.push(`home glucose around ${answers["home_glu"]}`);
+    if (answers["a1c"])       fragments.push(`last HbA1c: ${answers["a1c"]}`);
+    if (answers["meds_now"])  fragments.push(`on diabetes meds: ${answers["meds_now"]}`);
+    if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
+    if (answers["symptoms"])  fragments.push(`symptoms: ${answers["symptoms"]}`);
+
+  } else if (key === "lipid_fup") {
+    if (answers["lipid_val"]) fragments.push(`recent lipid profile: ${answers["lipid_val"]}`);
+    if (answers["meds_now"])  fragments.push(`on lipid-lowering meds: ${answers["meds_now"]}`);
+    if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
+    if (answers["muscle_sx"]) fragments.push(`muscle symptoms: ${answers["muscle_sx"]}`);
+    if (answers["lifestyle"]) fragments.push(`lifestyle: ${answers["lifestyle"]}`);
+
+  } else if (key === "med_refill") {
+    if (answers["chronic_dz"]) fragments.push(`chronic diseases: ${answers["chronic_dz"]}`);
+    if (answers["control"])    fragments.push(`self-perceived control: ${answers["control"]}`);
+    if (answers["side_fx"])    fragments.push(`side effects: ${answers["side_fx"]}`);
+    if (answers["adherence"])  fragments.push(`adherence: ${answers["adherence"]}`);
+
+  } else if (key === "insomnia") {
+    if (answers["type"])      fragments.push(`insomnia type: ${answers["type"]}`);
+    if (answers["hours"])     fragments.push(`sleep about ${answers["hours"]} hours per night`);
+    if (answers["day_fx"])    fragments.push(`daytime function: ${answers["day_fx"]}`);
+    if (answers["psych"])     fragments.push(`mood/anxiety: ${answers["psych"]}`);
+    if (answers["substance"]) fragments.push(`caffeine/alcohol use: ${answers["substance"]}`);
+
+  } else if (key === "anxiety") {
+    if (answers["worry"])     fragments.push(`main worries: ${answers["worry"]}`);
+    if (answers["somatic"])   fragments.push(`physical symptoms: ${answers["somatic"]}`);
+    if (answers["triggers"])  fragments.push(`triggers: ${answers["triggers"]}`);
+    if (answers["sleep"])     fragments.push(`sleep impact: ${answers["sleep"]}`);
+    if (answers["function"])  fragments.push(`functional impact: ${answers["function"]}`);
+
+  } else if (key === "depression") {
+    if (answers["mood"])      fragments.push(`mood: ${answers["mood"]}`);
+    if (answers["anhedonia"]) fragments.push(`loss of interest: ${answers["anhedonia"]}`);
+    if (answers["bio"])       fragments.push(`sleep/appetite/energy: ${answers["bio"]}`);
+    if (answers["guilt"])     fragments.push(`guilt/worthlessness: ${answers["guilt"]}`);
+    if (answers["si"])        fragments.push(`suicidal ideation: ${answers["si"]}`);
+
+  } else if (key === "dysuria") {
+    if (answers["frequency"]) fragments.push(`frequency/urgency: ${answers["frequency"]}`);
+    if (answers["fever"])     fragments.push(`fever/chills: ${answers["fever"]}`);
+    if (answers["flank"])     fragments.push(`flank pain: ${answers["flank"]}`);
+    if (answers["hematuria"]) fragments.push(`hematuria: ${answers["hematuria"]}`);
+    if (answers["sex"])       fragments.push(`sexual history: ${answers["sex"]}`);
+
+  } else if (key === "vaginal_discharge") {
+    if (answers["character"]) fragments.push(`discharge: ${answers["character"]}`);
+    if (answers["sx"])        fragments.push(`itching/pain: ${answers["sx"]}`);
+    if (answers["bleeding"])  fragments.push(`bleeding: ${answers["bleeding"]}`);
+    if (answers["sex"])       fragments.push(`sexual history: ${answers["sex"]}`);
+    if (answers["lmp"])       fragments.push(`LMP/pregnancy risk: ${answers["lmp"]}`);
+
+  } else if (key === "rash") {
+    if (answers["location"])  fragments.push(`rash at ${answers["location"]}`);
+    if (answers["character"]) fragments.push(`${answers["character"]}`);
+    if (answers["itch"])      fragments.push(`itch/pain: ${answers["itch"]}`);
+    if (answers["trigger"])   fragments.push(`possible triggers: ${answers["trigger"]}`);
+    if (answers["systemic"])  fragments.push(`systemic symptoms: ${answers["systemic"]}`);
+
+  } else if (key === "abnormal_lft") {
+    if (answers["values"])    fragments.push(`liver tests: ${answers["values"]}`);
+    if (answers["symptoms"])  fragments.push(`symptoms: ${answers["symptoms"]}`);
+    if (answers["alcohol"])   fragments.push(`alcohol use: ${answers["alcohol"]}`);
+    if (answers["meds_herb"]) fragments.push(`meds/herbs/supplements: ${answers["meds_herb"]}`);
+    if (answers["risk"])      fragments.push(`viral hepatitis risk: ${answers["risk"]}`);
+
+  } else if (key === "abnormal_renal") {
+    if (answers["values"])    fragments.push(`renal tests: ${answers["values"]}`);
+    if (answers["sx"])        fragments.push(`symptoms: ${answers["sx"]}`);
+    if (answers["htn_dm"])    fragments.push(`HTN/DM history: ${answers["htn_dm"]}`);
+    if (answers["nephrotox"]) fragments.push(`nephrotoxic meds/NSAID: ${answers["nephrotox"]}`);
+
   } else {
     Object.keys(answers).forEach(id => {
       if (id === "duration") return;
