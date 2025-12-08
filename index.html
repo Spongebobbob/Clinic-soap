@@ -29,6 +29,25 @@
       padding: 8px;
       white-space: pre-wrap;
     }
+
+/* 讓 Output / Doctor note 並排 */
+.section-row {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* 每一欄平均分配寬度 */
+.section-row .section {
+  flex: 1;
+}
+
+/* 手機螢幕自動變成上下排列 */
+@media (max-width: 900px) {
+  .section-row {
+    flex-direction: column;
+  }
+}
     select, input {
       padding: 4px;
       margin-top: 4px;
@@ -166,19 +185,22 @@ Sex:
   <button id="askAiBtn">Ask AI (silent)</button>
 </div>
 
-<!-- Output -->
-<div class="section">
-  <strong>Output:</strong>
-  <textarea id="output"></textarea>
+<div class="section-row">
+  <!-- Output -->
+  <div class="section">
+    <strong>Output:</strong>
+    <textarea id="output"></textarea>
+  </div>
+
+  <!-- Doctor note -->
+  <div class="section">
+    <strong>Doctor note (internal use only)</strong>
+    <textarea id="freeAiInput"
+      placeholder="在這裡貼上：上一份病歷、這次回診抽血結果或最新病況摘要…"></textarea>
+    <button id="freeAiBtn">Next step</button>
+  </div>
 </div>
 
-<!-- Free text for AI decision support -->
-<div class="section">
-  <strong>Doctor note</strong>
-  <textarea id="freeAiInput"
-            placeholder="在這裡貼上：上一份病歷、這次回診抽血結果或最新病況摘要…"></textarea>
-  <button id="freeAiBtn">Next step</button>
-</div>
 
 <!-- AI suggestion -->
 <div class="section">
