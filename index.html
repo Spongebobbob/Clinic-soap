@@ -1318,6 +1318,7 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   // PH / Allergy / Med / FH / Social（含預設值）
   const ph     = (document.getElementById("ph")?.value     || "").trim() || "denied";
   const al     = (document.getElementById("allergy")?.value|| "").trim() || "NKA";
+  const surg    = (document.getElementById("surg")?.value  || "").trim() || "denied";
   const med    = (document.getElementById("med")?.value    || "").trim() || "denied";
   const fh     = (document.getElementById("fh")?.value     || "").trim() || "no contributory";
   const social = (document.getElementById("social")?.value || "").trim() || "denied alcohol, betel or cigarette";
