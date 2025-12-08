@@ -101,6 +101,8 @@ Sex:
   <input id="med" type="text" placeholder="預設 denied">
   <label>FH:</label>
   <input id="fh" type="text" placeholder="預設 no contributory">
+  <label>Social History:</label>
+  <input id="sh" type="text" placeholder="預設 denied alcohol, betel or cigarette">
 </div>
 
 <!-- Chief complaint -->
@@ -684,7 +686,9 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   const al  = (document.getElementById("allergy").value || "").trim() || "NKA";
   const med = (document.getElementById("med").value || "").trim() || "denied";
   const fh  = (document.getElementById("fh").value || "").trim() || "no contributory";
-
+  const sh  = (document.getElementById("sh").value || "").trim() 
+              || "denied alcohol, betel or cigarette";
+  
   // ----- S -----
   let S = "S:\n";
   const ccLine = `CC: ${tpl.nameEn.charAt(0).toUpperCase() + tpl.nameEn.slice(1)}${answers["duration"] ? " for " + answers["duration"] : ""}`;
@@ -693,7 +697,7 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   const piSentence = buildPiSentence(key, tpl, answers, age, sex);
   S += "PI:\n" + piSentence + "\n";
 
-  S += `PH: ${ph}\nAllergy: ${al}\nMed: ${med}\nFH: ${fh}\n\n`;
+  S += `PH: ${ph}\nAllergy: ${al}\nMed: ${med}\nFH: ${fh}\nSH: ${sh}\n\n`;
 
   // ----- O -----
   let O = "O:\nVS: T / BP\nHEENT:\nChest:\n\n";
