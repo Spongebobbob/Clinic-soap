@@ -2,40 +2,49 @@ export const config = {
   runtime: "edge",
 };
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders,
+    },
+  });
+}
+
 export default async function handler(req) {
+  // 處理 CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Method not allowed" }, 405);
   }
 
   let body;
   try {
     body = await req.json();
   } catch (e) {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
   const soap = (body.soap || "").trim();
   if (!soap) {
-    return new Response(JSON.stringify({ error: "Missing SOAP text" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Missing SOAP text" }, 400);
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: "Missing OPENAI_API_KEY on server" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+    return jsonResponse(
+      { error: "Missing OPENAI_API_KEY on server" },
+      500
     );
   }
 
@@ -74,12 +83,9 @@ Keep the answer concise and structured.
 
     if (!apiResp.ok) {
       const errText = await apiResp.text();
-      return new Response(
-        JSON.stringify({ error: "OpenAI error", detail: errText }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
+      return jsonResponse(
+        { error: "OpenAI error", detail: errText },
+        500
       );
     }
 
@@ -87,17 +93,11 @@ Keep the answer concise and structured.
     const answer =
       data.choices?.[0]?.message?.content?.trim() || "No answer from AI.";
 
-    return new Response(JSON.stringify({ answer }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ answer }, 200);
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: "Network or server error", detail: String(e) }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+    return jsonResponse(
+      { error: "Network or server error", detail: String(e) },
+      500
     );
   }
 }
