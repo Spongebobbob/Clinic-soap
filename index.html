@@ -44,21 +44,50 @@
 
 /* 手機螢幕版面優化：只影響寬度小於 1300px 的裝置 */
 @media (max-width: 1300px) {
-
-  /* 整體留白縮小一點 */
+  /* 整體字體稍微放大一點 */
   body {
-    margin: 10px;
-    font-size: 14px;
+    font-size: 16px;
   }
 
-  h2 {
-    font-size: 18px;
+  /* 每個區塊的內距稍微縮小一點，畫面不要那麼擠 */
+  .section {
+    padding: 8px 10px;
   }
 
-  /* Output / Free note 改為上下排 */
+  /* Output / Free note 改成上下排，並留一點間距 */
   .section-row {
     flex-direction: column;
+    gap: 8px;
   }
+
+  /* 標題字體稍微放大 */
+  label,
+  strong {
+    font-size: 16px;
+  }
+
+  /* 所有輸入欄位在手機上變成比較高、字比較大 */
+  input,
+  select,
+  textarea {
+    width: 100%;
+    font-size: 16px;      /* 和 ChatGPT 類似大小 */
+    padding: 8px 10px;    /* 比現在高一點、比較好點 */
+  }
+
+  /* 文字區不要太矮，避免看起來一條線 */
+  textarea {
+    min-height: 140px;
+  }
+
+  /* 手機上按鈕一行一顆，變大顆好按 */
+  button {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 14px;
+  }
+}
+
 
   /* 每一塊區域 padding 小一點，讓畫面不要那麼擠 */
   .section {
