@@ -1330,7 +1330,7 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   // ===== Basic info =====
   const age = document.getElementById("age").value;
   // 如果你還是用下拉選單就改成 "sex"
-  const sex = document.getElementById("sexHidden")?.value || "";
+  const sex = sexHidden?.value || "";
 
   // ===== Past History Fields =====
   const ph   = (document.getElementById("ph")?.value || "").trim() || "denied";
