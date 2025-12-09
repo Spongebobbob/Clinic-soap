@@ -42,12 +42,66 @@
   flex: 1;
 }
 
-/* 手機螢幕自動變成上下排列 */
+/* 手機螢幕版面優化：只影響寬度小於 900px 的裝置 */
 @media (max-width: 900px) {
+
+  /* 整體留白縮小一點 */
+  body {
+    margin: 10px;
+    font-size: 14px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  /* Output / Free note 改為上下排 */
   .section-row {
     flex-direction: column;
   }
+
+  /* 每一塊區域 padding 小一點，讓畫面不要那麼擠 */
+  .section {
+    padding: 10px;
+  }
+
+  /* input / select 在手機上直接吃滿寬，方便點選 */
+  select,
+  input[type="text"],
+  input[type="number"] {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Past History 那幾格原本比較窄，在手機也拉滿 */
+  #ph,
+  #allergy,
+  #med,
+  #fh,
+  #surg,
+  #sh {
+    width: 100%;
+  }
+
+  /* 文字框高度略降，避免佔掉整個螢幕 */
+  textarea {
+    height: 180px;
+  }
+
+  /* 按鈕在手機上變成一列一顆，比較好按 */
+  button {
+    width: 100%;
+    margin-right: 0;
+    margin-top: 8px;
+  }
+
+  /* 性別按鈕排在同一列就好看一些 */
+  .sex-btn {
+    width: auto;
+    display: inline-block;
+  }
 }
+
     select, input {
       padding: 4px;
       margin-top: 4px;
