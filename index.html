@@ -215,6 +215,7 @@ Sex:
     <textarea id="freeAiInput"
       placeholder="在這裡貼上：上一份病歷、這次回診抽血結果或最新病況摘要…"></textarea>
     <button id="freeAiBtn">Next step</button>
+    <button id="hxSuggestBtn">問診建議</button>
   </div>
 </div>
 
@@ -1448,6 +1449,7 @@ const aiResult  = document.getElementById("aiResult");
 const freeAiBtn = document.getElementById("freeAiBtn");
 
 const AI_API_URL = "https://clinic-soap.vercel.app/api/clinic-ai";
+const hxSuggestBtn = document.getElementById("hxSuggestBtn");
 
 // ----------- 共用函式：丟文字給 AI，顯示回覆 -----------
 async function callAIWithText(text) {
@@ -1504,6 +1506,59 @@ askAiBtn.addEventListener("click", () => {
 freeAiBtn.addEventListener("click", () => {
   const text = document.getElementById("freeAiInput").value;
   callAIWithText(text);
+});
+
+// ----------- 問診建議按鈕：用 triage 模式，給初診怪怪主訴用 -----------
+hxSuggestBtn.addEventListener("click", async () => {
+  const complaint = (document.getElementById("freeAiInput").value || "").trim();
+  const age = document.getElementById("age").value || "";
+  const sex = document.getElementById("sex").value || "";
+
+  if (!complaint) {
+    alert("請先在 Free note 區塊輸入病人主訴或描述，再按「問診建議」。");
+    return;
+  }
+
+  aiStatus.textContent = "Loading...";
+  aiResult.textContent = "";
+
+  try {
+    const resp = await fetch(AI_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "triage",
+        age,
+        sex,
+        complaint
+      })
+    });
+
+    if (!resp.ok) {
+      aiStatus.textContent = "AI error (server side).";
+      try {
+        const errData = await resp.json();
+        aiResult.textContent = JSON.stringify(errData, null, 2);
+      } catch (e) {
+        aiResult.textContent = "";
+      }
+      return;
+    }
+
+    const data = await resp.json();
+
+    if (data.error) {
+      aiStatus.textContent = "AI error: " + data.error;
+      aiResult.textContent = data.detail || "";
+      return;
+    }
+
+    aiStatus.textContent = "問診建議：";
+    aiResult.textContent = data.answer || "(no content)";
+  } catch (e) {
+    aiStatus.textContent = "Network or server error.";
+    console.error(e);
+  }
 });
 
 </script>
