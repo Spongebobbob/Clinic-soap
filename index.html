@@ -44,85 +44,10 @@
 
 /* 手機螢幕版面優化：只影響寬度小於 1300px 的裝置 */
 @media (max-width: 1300px) {
-  /* 整體字體稍微放大一點 */
-  body {
-    font-size: 16px;
-  }
-
-  /* 每個區塊的內距稍微縮小一點，畫面不要那麼擠 */
-  .section {
-    padding: 8px 10px;
-  }
-
-  /* Output / Free note 改成上下排，並留一點間距 */
   .section-row {
     flex-direction: column;
-    gap: 8px;
-  }
-
-  /* 標題字體稍微放大 */
-  label,
-  strong {
-    font-size: 16px;
-  }
-
-  /* 所有輸入欄位在手機上變成比較高、字比較大 */
-  input,
-  select,
-  textarea {
-    width: 100%;
-    font-size: 16px;      /* 和 ChatGPT 類似大小 */
-    padding: 8px 10px;    /* 比現在高一點、比較好點 */
-  }
-
-  /* 文字區不要太矮，避免看起來一條線 */
-  textarea {
-    min-height: 140px;
-  }
-
-  /* 手機上按鈕一行一顆，變大顆好按 */
-  button {
-    width: 100%;
-    font-size: 16px;
-    padding: 10px 14px;
   }
 }
-
-
-  /* 每一塊區域 padding 小一點，讓畫面不要那麼擠 */
-  .section {
-    padding: 10px;
-  }
-
-  /* input / select 在手機上直接吃滿寬，方便點選 */
-  select,
-  input[type="text"],
-  input[type="number"] {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* Past History 那幾格原本比較窄，在手機也拉滿 */
-  #ph,
-  #allergy,
-  #med,
-  #fh,
-  #surg,
-  #sh {
-    width: 100%;
-  }
-
-  /* 文字框高度略降，避免佔掉整個螢幕 */
-  textarea {
-    height: 180px;
-  }
-
-  /* 按鈕在手機上變成一列一顆，比較好按 */
-  button {
-    width: 100%;
-    margin-right: 0;
-    margin-top: 8px;
-  }
 
   /* 性別按鈕排在同一列就好看一些 */
   .sex-btn {
