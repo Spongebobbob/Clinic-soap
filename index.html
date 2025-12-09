@@ -42,20 +42,12 @@
   flex: 1;
 }
 
-/* 手機螢幕版面優化：只影響寬度小於 1300px 的裝置 */
-@media (max-width: 1300px) {
+/* 手機螢幕自動變成上下排列 */
+@media (max-width: 900px) {
   .section-row {
     flex-direction: column;
   }
 }
-
-  /* 性別按鈕排在同一列就好看一些 */
-  .sex-btn {
-    width: auto;
-    display: inline-block;
-  }
-}
-
     select, input {
       padding: 4px;
       margin-top: 4px;
