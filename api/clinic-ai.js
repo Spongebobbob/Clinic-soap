@@ -19,12 +19,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { soap } = req.body || {};
-
-    if (!soap || typeof soap !== "string") {
-      res.status(400).json({ error: "Missing 'soap' field in body" });
-      return;
-    }
+    const { soap, mode, age, sex, complaint } = req.body || {};
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -32,19 +27,78 @@ export default async function handler(req, res) {
       return;
     }
 
-    // 組合要丟給模型的 prompt（單一字串即可）
-    const prompt =
-      "You are an internal medicine consultant.\n" +
-      "Here is a clinic SOAP note:\n\n" +
-      soap +
-      "\n\nPlease:\n" +
-      "1) Rewrite the \"PI\" (present illness) section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note.\n" +
-      "2) List likely diagnoses with brief reasoning.\n" +
-      "3) Suggest key physical exams and tests.\n" +
-      "4) Provide an initial management plan.\n" +
-      "Answer in concise English bullet points.";
+    let prompt = "";
 
-    // 呼叫 OpenAI（改用新的 /v1/responses endpoint）
+    // ====== 模式一：問診建議（triage / 初診怪怪主訴用） ======
+    if (mode === "triage") {
+      if (!complaint || typeof complaint !== "string") {
+        res.status(400).json({ error: "Missing 'complaint' field for triage mode" });
+        return;
+      }
+
+      const safeAge = age ? String(age) : "unknown";
+      const safeSex = sex === "M" || sex === "F" ? sex : "Unknown";
+
+      prompt =
+        `You are a family medicine physician in Taiwan working in a busy clinic.\n` +
+        `Your job is to help a junior doctor handle an INITIAL, UNSTRUCTURED CHIEF COMPLAINT.\n\n` +
+        `The doctor is afraid of missing important diagnoses and red flags,\n` +
+        `so you MUST:\n` +
+        `- Classify the symptom into a main category (e.g. chest pain, dyspnea, abdominal pain, bloating, headache, dizziness/vertigo, fever, cough, palpitations, edema, fatigue, weight loss, urinary, psychiatric, musculoskeletal, skin, others).\n` +
+        `- Propose STRUCTURED history questions the doctor can ask in Mandarin, with short English hints in parentheses.\n` +
+        `- Highlight red-flag questions that must be asked.\n` +
+        `- Suggest key physical exam focus.\n` +
+        `- Suggest likely symptom category and initial differential diagnoses.\n\n` +
+        `Patient info:\n` +
+        `Age: ${safeAge}\n` +
+        `Sex: ${safeSex}   (M/F)\n` +
+        `Chief complaint (patient's own words, may be vague or in colloquial Chinese):\n` +
+        `"""${complaint}"""\n\n` +
+        `Please respond in the following format, in Chinese with short English hints:\n\n` +
+        `1) Symptom category（症狀分類）\n` +
+        `- 主分類: ______\n` +
+        `- 可能相關系統: ______\n\n` +
+        `2) Urgency level（急重症風險）\n` +
+        `- 分級: 綠色 / 黃色 / 紅色\n` +
+        `- 一句話理由: ______\n\n` +
+        `3) 建議先問的重點病史問題（一般問診）\n` +
+        `請用條列，直接給我可以照念的問句（中文 + 括號內英文提示），大約 6–10 題：\n` +
+        `- 例：什麼時候開始這個不舒服的？(When did it start?)\n\n` +
+        `4) Red flag 問診（一定要問）\n` +
+        `請列出 4–8 題，專門用來排除危險診斷：\n\n` +
+        `5) 建議的身體檢查（Physical exam focus）\n` +
+        `條列簡短項目，供醫師快速掃描：\n` +
+        `- General / vital signs:\n` +
+        `- 心肺：\n` +
+        `- 腹部 / 神經 / 其他：（視情況）\n\n` +
+        `6) 可能的鑑別診斷（Differential diagnosis）\n` +
+        `請列 3–6 個，以「最常見或最重要不要漏掉」為主，每個後面加 1 行簡短理由：\n` +
+        `- ______ ：理由：______\n\n` +
+        `注意：\n` +
+        `- 不要幫我寫完整病歷，只要「問診問題建議 + 重點 PE + 鑑別診斷」即可。\n` +
+        `- 假設醫師只有 3–5 分鐘可以問問題，請挑「最有用、最有資訊量」的問題。\n` +
+        `- 重點是讓醫師在遇到罕見或怪怪的主訴時，不會腦袋一片空白。\n`;
+
+    // ====== 模式二：原本 SOAP 潤飾 / Plan 建議 ======
+    } else {
+      if (!soap || typeof soap !== "string") {
+        res.status(400).json({ error: "Missing 'soap' field in body" });
+        return;
+      }
+
+      prompt =
+        "You are an internal medicine consultant.\n" +
+        "Here is a clinic SOAP note:\n\n" +
+        soap +
+        "\n\nPlease:\n" +
+        "1) Rewrite the \"PI\" (present illness) section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note.\n" +
+        "2) List likely diagnoses with brief reasoning.\n" +
+        "3) Suggest key physical exams and tests.\n" +
+        "4) Provide an initial management plan.\n" +
+        "Answer in concise English bullet points.";
+    }
+
+    // 呼叫 OpenAI（/v1/responses）
     const apiResp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -52,7 +106,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini", // 也可以換成 gpt-4.1、gpt-5.1-mini 等
+        model: "gpt-4.1-mini",
         input: prompt,
         max_output_tokens: 800,
       }),
@@ -69,7 +123,6 @@ export default async function handler(req, res) {
 
     const data = await apiResp.json();
 
-    // 新的 Responses API 回傳格式
     const answer =
       data.output_text ||
       data.output?.[0]?.content?.[0]?.text ||
