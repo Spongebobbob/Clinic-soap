@@ -108,7 +108,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "gpt-4.1-mini",
         input: prompt,
-        max_output_tokens: 800,
+        max_output_tokens: 2000,
       }),
     });
 
