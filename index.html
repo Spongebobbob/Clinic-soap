@@ -89,6 +89,8 @@ button:hover {
         "Liberation Mono", "Courier New", monospace;
       font-size: 0.9rem;
       white-space: pre-wrap;
+      word-wrap: break-word; /* 讓長字串強制換行 */
+      overflow-wrap: anywhere; /* 任何地方都能斷行，避免截斷 */
     }
   </style>
   <!-- 用來產生 QR code 的小工具（前端用，安全） -->
