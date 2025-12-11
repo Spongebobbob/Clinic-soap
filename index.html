@@ -222,11 +222,26 @@ Sex:
 </div>
 
 
-<!-- AI suggestion -->
-<div class="section">
-  <strong>Additional considerations:</strong>
-  <div id="aiStatus" style="font-size:0.9em;color:#aaa;margin-top:4px;"></div>
-  <pre id="aiResult" style="margin-top:6px;"></pre>
+<!-- AI suggestion + Free typing panel -->
+<div class="section-row">
+  
+  <!-- 左側：AI 建議 -->
+  <div class="section" style="flex: 2;">
+    <strong>Additional considerations:</strong>
+    <div id="aiStatus" style="font-size:0.9em;color:#aaa;margin-top:4px;"></div>
+    <pre id="aiResult" style="margin-top:6px;"></pre>
+  </div>
+
+  <!-- 右側：新的自由打字區域 -->
+  <div class="section" style="flex: 1;">
+    <strong>Quick note</strong>
+    <textarea
+      id="sideNote"
+      placeholder="可在此自由打字：邊看 AI 建議邊問診/做筆記，不會覆蓋掉內容。"
+      style="height: 300px; width: 100%; background:#111; color:#f5f5f5; border:1px solid #555; border-radius:4px; padding:8px;"
+    ></textarea>
+  </div>
+
 </div>
 
 <script>
