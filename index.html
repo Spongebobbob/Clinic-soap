@@ -1566,7 +1566,11 @@ hxSuggestBtn.addEventListener("click", async () => {
 
     if (data.error) {
       aiStatus.textContent = "AI error: " + data.error;
-      aiResult.textContent = data.detail || "";
+      const text = data.answer || "";
+  aiResult.textContent = text;
+
+  // ⭐ 自動把 3) 4) 5) 貼到 Quick note
+  appendKeySectionsToQuickNote(text);
       return;
     }
 
@@ -1576,6 +1580,27 @@ hxSuggestBtn.addEventListener("click", async () => {
     aiStatus.textContent = "Network or server error.";
     console.error(e);
   }
+
+  // === 新增：解析 Additional considerations 並自動加入 Quick note ===
+function appendKeySectionsToQuickNote(aiText) {
+  const sideNote = document.getElementById("sideNote");
+
+  // 用 regex 抓 3) 4) 5)
+  const sec3 = aiText.match(/3\)[\s\S]*?(?=4\))/);
+  const sec4 = aiText.match(/4\)[\s\S]*?(?=5\))/);
+  const sec5 = aiText.match(/5\)[\s\S]*?(?=6\))/);
+
+  let extracted = "";
+
+  if (sec3) extracted += sec3[0].trim() + "\n\n";
+  if (sec4) extracted += sec4[0].trim() + "\n\n";
+  if (sec5) extracted += sec5[0].trim() + "\n\n";
+
+  if (extracted) {
+    sideNote.value += "\n\n=== AI 自動擷取問診重點 ===\n" + extracted;
+  }
+}
+
 });
 
 </script>
