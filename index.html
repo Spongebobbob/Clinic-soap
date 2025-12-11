@@ -199,6 +199,9 @@ Sex:
 <!-- Buttons -->
 <div class="section">
   <button id="generateBtn">Generate SOAP</button>
+  <button id="openEvidenceBtn">Open in OpenEvidence</button>
+  <button id="chatgptBtn">Open in ChatGPT (PC)</button>
+  <button id="askAiBtn">Plan</button>
 </div>
 
 <div class="section-row">
@@ -206,7 +209,6 @@ Sex:
   <div class="section">
     <strong>Output:</strong>
     <textarea id="output"></textarea>
-    <button id="askAiBtn" style="margin-top:10px;">Plan</button>
   </div>
 
   <!-- Doctor note -->
@@ -227,20 +229,7 @@ Sex:
   <div class="section" style="flex: 2;">
     <strong>Additional considerations:</strong>
     <div id="aiStatus" style="font-size:0.9em;color:#aaa;margin-top:4px;"></div>
-    <textarea 
-  id="aiResult"
-  style="
-    margin-top:6px;
-    width:100%;
-    height:900px;
-    background:#111;
-    color:#f5f5f5;
-    border:1px solid #555;
-    border-radius:4px;
-    padding:8px;
-    white-space:pre-wrap;
-  "
-></textarea>
+    <pre id="aiResult" style="margin-top:6px;"></pre>
   </div>
 
   <!-- 右側：新的自由打字區域 -->
@@ -1397,21 +1386,87 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   output.value = note;
 });
 
+// ========================== OpenEvidence: copy full SOAP ==========================
+document.getElementById("openEvidenceBtn").addEventListener("click", () => {
+  const text = output.value.trim();
+  if (!text) {
+    alert("請先按『Generate SOAP』產生病例，再送到 OpenEvidence。");
+    return;
+  }
 
-<script>
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("已將完整病例複製到剪貼簿，開啟 OpenEvidence 後直接貼上即可。");
+    }).catch(() => {
+      alert("無法自動複製，請在本頁手動全選複製後再貼到 OpenEvidence。");
+    });
+  } else {
+    alert("請在本頁手動全選複製後再貼到 OpenEvidence。");
+  }
+
+  window.open("https://www.openevidence.com/", "_blank");
+});
+
+// ========================== ChatGPT: copy full SOAP （電腦用） ==========================
+document.getElementById("chatgptBtn").addEventListener("click", () => {
+  const text = output.value.trim();
+  if (!text) {
+    alert("請先按『Generate SOAP』產生病例，再送到 ChatGPT。");
+    return;
+  }
+
+  const promptText =
+`You are an internal medicine consultant.
+Here is a clinic SOAP note:
+
+${text}
+
+Please:
+
+1) Rewrite the "PI" (present illness) section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note.
+
+2) List likely diagnoses with brief reasoning.
+
+3) Suggest key physical exams and tests.
+
+4) Provide an initial management plan.
+
+Format your answer in plain text with clear headings, like:
+
+Refined PI:
+...
+
+1) Likely diagnoses:
+- ...
+
+2) Key physical exams and tests:
+- ...
+
+3) Initial management plan:
+- ...
+`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(promptText).then(() => {
+      alert("已將 ChatGPT prompt 複製到剪貼簿，開啟 ChatGPT 後直接貼上即可。");
+    }).catch(() => {
+      alert("無法自動複製，請在本頁手動全選複製後再貼到 ChatGPT。");
+    });
+  } else {
+    alert("請在本頁手動複製後再貼到 ChatGPT。");
+  }
+
+  window.open("https://chatgpt.com/", "_blank");
+});
+
+
 // ========================== Ask AI via backend (silent mode) ==========================
 const askAiBtn  = document.getElementById("askAiBtn");
 const aiStatus  = document.getElementById("aiStatus");
-const aiResult  = document.getElementById("aiResult"); // 這是 textarea
+const aiResult  = document.getElementById("aiResult");
 const freeAiBtn = document.getElementById("freeAiBtn");
-const hxSuggestBtn = document.getElementById("hxSuggestBtn");
 
 const AI_API_URL = "/api/clinic-ai";
-
-// 小工具：統一用 value 來顯示文字
-function setAiResult(text) {
-  aiResult.value = text || "";
-}
+const hxSuggestBtn = document.getElementById("hxSuggestBtn");
 
 // ----------- 共用函式：丟文字給 AI，顯示回覆 -----------
 async function callAIWithText(text) {
@@ -1422,7 +1477,7 @@ async function callAIWithText(text) {
   }
 
   aiStatus.textContent = "Loading...";
-  setAiResult("");
+  aiResult.textContent = "";
 
   try {
     const resp = await fetch(AI_API_URL, {
@@ -1435,9 +1490,9 @@ async function callAIWithText(text) {
       aiStatus.textContent = "AI error (server side).";
       try {
         const errData = await resp.json();
-        setAiResult(JSON.stringify(errData, null, 2));
+        aiResult.textContent = JSON.stringify(errData, null, 2);
       } catch (e) {
-        setAiResult("");
+        aiResult.textContent = "";
       }
       return;
     }
@@ -1446,31 +1501,31 @@ async function callAIWithText(text) {
 
     if (data.error) {
       aiStatus.textContent = "AI error: " + data.error;
-      setAiResult(data.detail || "");
+      aiResult.textContent = data.detail || "";
       return;
     }
 
     aiStatus.textContent = "Suggestion:";
-    setAiResult(data.answer || "(no content)");
+    aiResult.textContent = data.answer || "(no content)";
   } catch (e) {
     aiStatus.textContent = "Network or server error.";
     console.error(e);
   }
 }
 
-// ----------- Plan 按鈕：從 Output 送出 -----------
+// ----------- 原本 AI 按鈕：從 SOAP 內容送出 -----------
 askAiBtn.addEventListener("click", () => {
-  const text = document.getElementById("output").value.trim();
+  const text = output.value.trim();
   callAIWithText(text);
 });
 
-// ----------- Next step 按鈕：從 Free note 送出 -----------
+// ----------- 自由輸入區塊：從 Doctor note 送出 -----------
 freeAiBtn.addEventListener("click", () => {
   const text = document.getElementById("freeAiInput").value;
   callAIWithText(text);
 });
 
-// ----------- 問診建議按鈕：用 triage 模式 -----------
+// ----------- 問診建議按鈕：用 triage 模式，給初診怪怪主訴用 -----------
 hxSuggestBtn.addEventListener("click", async () => {
   const complaint = (document.getElementById("freeAiInput").value || "").trim();
   const age = document.getElementById("age").value || "";
@@ -1482,7 +1537,7 @@ hxSuggestBtn.addEventListener("click", async () => {
   }
 
   aiStatus.textContent = "Loading...";
-  setAiResult("");
+  aiResult.textContent = "";
 
   try {
     const resp = await fetch(AI_API_URL, {
@@ -1500,9 +1555,9 @@ hxSuggestBtn.addEventListener("click", async () => {
       aiStatus.textContent = "AI error (server side).";
       try {
         const errData = await resp.json();
-        setAiResult(JSON.stringify(errData, null, 2));
+        aiResult.textContent = JSON.stringify(errData, null, 2);
       } catch (e) {
-        setAiResult("");
+        aiResult.textContent = "";
       }
       return;
     }
@@ -1511,20 +1566,17 @@ hxSuggestBtn.addEventListener("click", async () => {
 
     if (data.error) {
       aiStatus.textContent = "AI error: " + data.error;
-      const text = data.answer || "";
-      setAiResult(text);
-      // 如果你有 appendKeySectionsToQuickNote(text) 也可以放在這裡
+      aiResult.textContent = data.detail || "";
       return;
     }
 
     aiStatus.textContent = "問診建議：";
-    setAiResult(data.answer || "(no content)");
+    aiResult.textContent = data.answer || "(no content)";
   } catch (e) {
     aiStatus.textContent = "Network or server error.";
     console.error(e);
   }
 });
-
 
 </script>
 
