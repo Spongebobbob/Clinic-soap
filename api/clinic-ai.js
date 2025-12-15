@@ -10,6 +10,7 @@
 // - For lipid-related decisions, this endpoint injects an evidence pack
 //   from ./lipidEvidence.js so the model bases reasoning on YOUR guideline file.
 // =====================================================
+
 import { escEas2025RiskStratify } from "./escRisk.js";
 import { lipidEvidence, nhiRiskFactors } from "./lipidEvidence.js";
 
@@ -27,7 +28,6 @@ function clampNum(x, min, max, fallback = null) {
 }
 
 function compact(obj) {
-  // Remove undefined/null keys for cleaner prompts
   const out = {};
   for (const k of Object.keys(obj)) {
     const v = obj[k];
@@ -41,8 +41,6 @@ function compact(obj) {
 // Evidence Pack Builder
 // -------------------------
 function buildLipidEvidenceContext() {
-  // Keep this reasonably compact; you can expand later if needed.
-  // The model must treat this as authoritative, source-limited evidence.
   const targets = (lipidEvidence?.ldlTargets || []).map((e) => ({
     id: e.id,
     appliesTo: e.appliesTo,
@@ -126,46 +124,20 @@ function buildLipidEvidenceContext() {
     "   you MUST base recommendations ONLY on this evidence pack.\n" +
     "2) Do NOT use external memory or other guidelines for lipid topics.\n" +
     "3) If something is not covered here, explicitly say: 'Not covered in provided evidence pack.'\n" +
-    "4) When citing, cite by evidence id (e.g., ESC2025_LDL_VERY_HIGH_RISK) + source fields.\n\n" +
+    "4) When citing, cite by evidence id + source fields.\n\n" +
     "EVIDENCE_PACK_JSON:\n" +
     JSON.stringify(pack, null, 2) +
     "\n=== END EVIDENCE PACK ===\n"
   );
 }
 
-// Optional: only inject evidence pack when case likely involves lipid topics.
-// You can keep always-inject (safe but longer). This heuristic reduces token usage.
 function shouldInjectLipidEvidence({ soap, complaint, mode }) {
-  if (mode === "triage") {
-    // triage is about symptom questioning; usually no lipid pack needed
-    return false;
-  }
+  if (mode === "triage") return false;
   const text = `${soap || ""}\n${complaint || ""}`.toLowerCase();
   const keywords = [
-    "ldl",
-    "cholesterol",
-    "lipid",
-    "statin",
-    "ezetimibe",
-    "pcsk9",
-    "bempedoic",
-    "lp(a)",
-    "lpa",
-    "hyperlipidem",
-    "hld",
-    "dyslip",
-    "健保",
-    "給付",
-    "高血脂",
-    "膽固醇",
-    "降脂",
-    "羅舒",
-    "阿托",
-    "辛伐",
-    "普伐",
-    "瑞舒",
-    "依折麥布",
-    "pcsk9",
+    "ldl", "cholesterol", "lipid", "statin", "ezetimibe", "pcsk9", "bempedoic",
+    "lp(a)", "lpa", "hyperlipidem", "hld", "dyslip",
+    "健保", "給付", "高血脂", "膽固醇", "降脂", "依折麥布",
   ];
   return keywords.some((k) => text.includes(k));
 }
@@ -181,42 +153,19 @@ function buildTriagePrompt({ age, sex, complaint }) {
   return (
     `You are a family medicine physician in Taiwan working in a busy clinic.\n` +
     `Your job is to help a junior doctor handle an INITIAL, UNSTRUCTURED CHIEF COMPLAINT.\n\n` +
-    `The doctor is afraid of missing important diagnoses and red flags,\n` +
-    `so you MUST:\n` +
-    `- Classify the symptom into a main category (e.g. chest pain, dyspnea, abdominal pain, bloating, headache, dizziness/vertigo, fever, cough, palpitations, edema, fatigue, weight loss, urinary, psychiatric, musculoskeletal, skin, others).\n` +
-    `- Propose STRUCTURED history questions the doctor can ask in Mandarin, with short English hints in parentheses.\n` +
-    `- Highlight red-flag questions that must be asked.\n` +
-    `- Suggest key physical exam focus.\n` +
-    `- Suggest likely symptom category and initial differential diagnoses.\n\n` +
+    `Please respond in Chinese with short English hints.\n\n` +
     `Patient info:\n` +
     `Age: ${safeAge}\n` +
     `Sex: ${safeSex} (M/F)\n` +
-    `Chief complaint (patient's own words, may be vague or in colloquial Chinese):\n` +
+    `Chief complaint:\n` +
     `"""${cc}"""\n\n` +
-    `Please respond in the following format, in Chinese with short English hints:\n\n` +
+    `Format:\n` +
     `1) Symptom category（症狀分類）\n` +
-    `- 主分類: ______\n` +
-    `- 可能相關系統: ______\n\n` +
     `2) Urgency level（急重症風險）\n` +
-    `- 分級: 綠色 / 黃色 / 紅色\n` +
-    `- 一句話理由: ______\n\n` +
-    `3) 建議先問的重點病史問題（一般問診）\n` +
-    `請用條列，直接給我可以照念的問句（中文 + 括號內英文提示），大約 6–10 題：\n` +
-    `- 例：什麼時候開始這個不舒服的？(When did it start?)\n\n` +
-    `4) Red flag 問診（一定要問）\n` +
-    `請列出 4–8 題，專門用來排除危險診斷：\n\n` +
-    `5) 建議的身體檢查（Physical exam focus）\n` +
-    `條列簡短項目，供醫師快速掃描：\n` +
-    `- General / vital signs:\n` +
-    `- 心肺：\n` +
-    `- 腹部 / 神經 / 其他：（視情況）\n\n` +
-    `6) 可能的鑑別診斷（Differential diagnosis）\n` +
-    `請列 3–6 個，以「最常見或最重要不要漏掉」為主，每個後面加 1 行簡短理由：\n` +
-    `- ______ ：理由：______\n\n` +
-    `注意：\n` +
-    `- 不要幫我寫完整病歷，只要「問診問題建議 + 重點 PE + 鑑別診斷」即可。\n` +
-    `- 假設醫師只有 3–5 分鐘可以問問題，請挑「最有用、最有資訊量」的問題。\n` +
-    `- 重點是讓醫師在遇到罕見或怪怪的主訴時，不會腦袋一片空白。\n`
+    `3) 一般問診問題（6–10 題，中文+括號英文提示）\n` +
+    `4) Red flags（4–8 題）\n` +
+    `5) PE focus\n` +
+    `6) Differential（3–6 個＋理由）\n`
   );
 }
 
@@ -226,7 +175,7 @@ function buildImConsultPrompt({ soap }) {
     "Here is a clinic SOAP note:\n\n" +
     soap +
     "\n\nPlease:\n" +
-    "1) Rewrite the \"PI\" (present illness) section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note.\n" +
+    "1) Rewrite the \"PI\" into fluent, concise English.\n" +
     "2) List likely diagnoses with brief reasoning.\n" +
     "3) Suggest key physical exams and tests.\n" +
     "4) Provide an initial management plan.\n" +
@@ -235,86 +184,47 @@ function buildImConsultPrompt({ soap }) {
 }
 
 function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
-  const evidenceBlock = injectEvidence
-    ? "\n\n" + buildLipidEvidenceContext() + "\n\n"
-    : "";
+  const evidenceBlock = injectEvidence ? "\n\n" + buildLipidEvidenceContext() + "\n\n" : "";
 
-  return (
-    const escRiskBlock =
-  escRisk
+  const escRiskBlock = escRisk
     ? "\n\n=== ESC/EAS 2025 風險分層（系統判定，請勿自行覆寫） ===\n" +
       `風險等級：${escRisk.category}\n` +
       "判定理由：\n" +
-      escRisk.reasons.map(r => `- ${r}`).join("\n") +
-      "\nLDL-C 目標：\n" +
+      (escRisk.reasons || []).map((r) => `- ${r}`).join("\n") +
+      "\nLDL-C 目標（若有明確目標）：\n" +
       (escRisk.ldlTarget?.mgdl
-        ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL，且至少下降 ${escRisk.ldlTarget.percentReduction}%`
-        : "- 本風險層級無明確 LDL-C 數值目標，建議以長期風險與共同決策為主") +
-      "\n=== END ESC RISK ===\n\n"
+        ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL，且至少下降 ${escRisk.ldlTarget.percentReduction}%（${escRisk.ldlTarget.evidenceId || "N/A"}）\n`
+        : "- 本風險層級無明確 LDL-C 數值目標；請以長期風險與共同決策為主。\n") +
+      "=== END ESC RISK ===\n\n"
     : "";
 
+  return (
+    escRiskBlock +
     "You are a family medicine clinical decision support system practicing in Taiwan.\n\n" +
-    "You are assisting a physician in an outpatient clinic with limited time.\n" +
-    "Your goal is to provide SAFE, GUIDELINE-BASED, and PRACTICAL recommendations.\n\n" +
-
-    "IMPORTANT RULES (must follow):\n" +
-    "- If you are provided an evidence pack, you MUST use it as the primary source.\n" +
-    "- If a recommendation is guideline-based, you MUST explicitly cite the guideline name and year.\n" +
-    "- If Taiwan National Health Insurance (NHI) reimbursement rules are relevant, list them separately and clearly.\n" +
+    "IMPORTANT RULES:\n" +
     "- Do NOT invent guidelines or citations.\n" +
-    "- If evidence is uncertain or guideline recommendations differ, state this explicitly.\n" +
-    "- Be concise and clinically realistic.\n\n" +
+    "- If an evidence pack is provided, use it as the primary source.\n\n" +
 
     evidenceBlock +
 
     "--------------------------------------------------\n\n" +
     "Here is a clinic SOAP note:\n\n" +
     soap +
-    "\n\n" +
-    "--------------------------------------------------\n\n" +
+    "\n\n--------------------------------------------------\n\n" +
 
-    "Please do the following:\n\n" +
-    "1) Rewrite the \"PI\" (present illness) section into fluent, concise English,\n" +
-    "   as if written by a native internal medicine physician for a clinic note.\n\n" +
+    "請完成以下輸出（請用【繁體中文】回答，醫學名詞可保留英文）：\n" +
+    "1) 【PI 英文化】把 present illness 寫成流暢精簡英文（門診病歷風格）。\n" +
+    "2) 【Assessment】最可能問題 1–2 行。\n" +
+    "3) 【Differential】3–5 個鑑別＋一句理由。\n" +
+    "4) 【Evaluation】門診可行的 PE / labs / imaging 建議。\n" +
+    "5) 【Plan】分『現在做』與『追蹤再評估』條列。\n" +
+    "6) 【Evidence & Guideline Support】\n" +
+    "   - 若有 evidence pack：請用 evidence id + guideline/year/section。\n" +
+    "   - 必要時可引用 1 句關鍵原文（短句）。\n" +
+    "7) 【Taiwan NHI 給付考量】與醫學建議分開寫。\n\n" +
 
-    "2) Assessment:\n" +
-    "   - Summarize the most likely working diagnosis or clinical problem in 1–2 lines.\n" +
-    "   - Prioritize by clinical importance and risk.\n\n" +
-
-    "3) Differential diagnoses (if applicable):\n" +
-    "   - List 3–5 reasonable differentials.\n" +
-    "   - Give one short justification for each.\n\n" +
-
-    "4) Suggested evaluation:\n" +
-    "   - Key physical examinations to focus on.\n" +
-    "   - Key laboratory tests or imaging if indicated.\n" +
-    "   - Keep this practical for an outpatient clinic.\n\n" +
-
-    "5) Management plan:\n" +
-    "   - Provide an initial, stepwise management plan.\n" +
-    "   - Use bullet points.\n" +
-    "   - Clearly distinguish between what should be done now and what to reassess later.\n\n" +
-
-    "6) Evidence & guideline support (MANDATORY SECTION):\n" +
-    "   - Cite relevant guideline(s) with full name and year.\n" +
-    "   - Specify the section or table if known.\n" +
-    "   - Quote ONE key sentence verbatim when appropriate.\n" +
-    "   - If an evidence pack is provided, cite by evidence id + source.\n\n" +
-
-    "7) Taiwan NHI reimbursement considerations (if applicable):\n" +
-    "   - State whether the recommended treatment is NHI-covered.\n" +
-    "   - List key reimbursement criteria or target thresholds if relevant.\n" +
-    "   - Clearly distinguish medical recommendation from reimbursement limitation.\n\n" +
-
-    "--------------------------------------------------\n\n" +
-    "Formatting requirements:\n" +
-"Formatting & language requirements:\n" +
-"- 請使用【繁體中文】回答，醫學名詞可保留英文（如 LDL-C、ASCVD、Lp(a)、statin）。\n" +
-"- 使用清楚的段落標題與條列式重點，方便臨床快速閱讀。\n" +
-"- 句子請簡短、直接，避免長句與過度學術化表達。\n" +
-"- 優先呈現『臨床可行性』與『實際決策重點』，而非理論完整性。\n" +
-"- Guideline 與條文引用請保留英文原名與年份（例如 ESC/EAS 2025、NHI 2.6.1）。\n" +
-"- Taiwan NHI 給付規定請與醫學建議【分開段落】說明，避免混淆。\n"
+    "格式要求：\n" +
+    "- 段落標題清楚、條列為主、句子短。\n"
   );
 }
 
@@ -322,18 +232,14 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
 // Main Handler
 // -------------------------
 export default async function handler(req, res) {
-  // --- CORS for github.io / static frontends ---
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  // Preflight
   if (req.method === "OPTIONS") {
     res.status(200).end();
     return;
   }
-
-  // Only POST
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -341,7 +247,7 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const mode = safeStr(body.mode, "plan"); // triage / im_consult / plan(default)
+    const mode = safeStr(body.mode, "plan"); // triage / im_consult / plan
 
     const soap = safeStr(body.soap, "");
     const complaint = safeStr(body.complaint, "");
@@ -354,7 +260,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Model & output tokens (allow override from client, but safe defaults)
     const model = safeStr(body.model, "gpt-4.1-mini");
     const maxOut = clampNum(body.max_output_tokens, 200, 3000, 2000);
 
@@ -373,49 +278,32 @@ export default async function handler(req, res) {
       }
       prompt = buildImConsultPrompt({ soap });
     } else {
-  // plan (default)
-  if (!soap) {
-    res.status(400).json({ error: "Missing 'soap' field in body" });
-    return;
-  }
+      if (!soap) {
+        res.status(400).json({ error: "Missing 'soap' field in body" });
+        return;
+      }
 
-  // ================================
-  // ESC/EAS 2025 risk stratification
-  // ================================
-  const patientForRisk = {
-    ascvd: !!body.ascvd,
-    diabetes: !!body.diabetes,
-    dmTargetOrganDamage: !!body.dmTargetOrganDamage,
-    dmMajorRiskFactorCount:
-      typeof body.dmMajorRiskFactorCount === "number"
-        ? body.dmMajorRiskFactorCount
-        : null,
-    t1dmLongDuration: !!body.t1dmLongDuration,
+      const patientForRisk = {
+        ascvd: !!body.ascvd,
+        diabetes: !!body.diabetes,
+        dmTargetOrganDamage: !!body.dmTargetOrganDamage,
+        dmMajorRiskFactorCount:
+          typeof body.dmMajorRiskFactorCount === "number" ? body.dmMajorRiskFactorCount : null,
+        t1dmLongDuration: !!body.t1dmLongDuration,
+        ckdEgfr: body.egfr ?? null,
+        sbp: body.sbp ?? null,
+        ldl: body.ldl ?? null,
+        hypertension: !!body.hypertension,
+        smoking: !!body.smoking,
+        familyHistoryPrematureASCVD: !!body.familyHistoryPrematureASCVD,
+      };
 
-    ckdEgfr: body.egfr ?? null,
-    sbp: body.sbp ?? null,
-    ldl: body.ldl ?? null,
+      const escRisk = escEas2025RiskStratify(patientForRisk);
+      const injectEvidence = shouldInjectLipidEvidence({ soap, complaint, mode });
 
-    // 一般危險因子（⚠️ 不會直接升級為 high risk）
-    hypertension: !!body.hypertension,
-    smoking: !!body.smoking,
-    familyHistoryPrematureASCVD: !!body.familyHistoryPrematureASCVD,
-  };
+      prompt = buildPlanPrompt({ soap, injectEvidence, escRisk });
+    }
 
-  const escRisk = escEas2025RiskStratify(patientForRisk);
-
-  // 是否需要注入 lipid guideline
-  const injectEvidence = shouldInjectLipidEvidence({ soap, complaint, mode });
-
-  // 組 prompt（把 ESC risk 結果塞進去）
-  prompt = buildPlanPrompt({
-    soap,
-    injectEvidence,
-    escRisk, // 👈 傳進去
-  });
-}
-
-    // Call OpenAI Responses API
     const apiResp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -439,12 +327,7 @@ export default async function handler(req, res) {
     }
 
     const data = await apiResp.json();
-
-    const answer =
-      data.output_text ||
-      data.output?.[0]?.content?.[0]?.text ||
-      "";
-
+    const answer = data.output_text || data.output?.[0]?.content?.[0]?.text || "";
     res.status(200).json({ answer });
   } catch (err) {
     console.error("clinic-ai error:", err);
