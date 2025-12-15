@@ -10,7 +10,7 @@
 // - For lipid-related decisions, this endpoint injects an evidence pack
 //   from ./lipidEvidence.js so the model bases reasoning on YOUR guideline file.
 // =====================================================
-
+import { escEas2025RiskStratify } from "./escRisk.js";
 import { lipidEvidence, nhiRiskFactors } from "./lipidEvidence.js";
 
 // -------------------------
@@ -234,12 +234,25 @@ function buildImConsultPrompt({ soap }) {
   );
 }
 
-function buildPlanPrompt({ soap, injectEvidence }) {
+function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
   const evidenceBlock = injectEvidence
     ? "\n\n" + buildLipidEvidenceContext() + "\n\n"
     : "";
 
   return (
+    const escRiskBlock =
+  escRisk
+    ? "\n\n=== ESC/EAS 2025 風險分層（系統判定，請勿自行覆寫） ===\n" +
+      `風險等級：${escRisk.category}\n` +
+      "判定理由：\n" +
+      escRisk.reasons.map(r => `- ${r}`).join("\n") +
+      "\nLDL-C 目標：\n" +
+      (escRisk.ldlTarget?.mgdl
+        ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL，且至少下降 ${escRisk.ldlTarget.percentReduction}%`
+        : "- 本風險層級無明確 LDL-C 數值目標，建議以長期風險與共同決策為主") +
+      "\n=== END ESC RISK ===\n\n"
+    : "";
+
     "You are a family medicine clinical decision support system practicing in Taiwan.\n\n" +
     "You are assisting a physician in an outpatient clinic with limited time.\n" +
     "Your goal is to provide SAFE, GUIDELINE-BASED, and PRACTICAL recommendations.\n\n" +
@@ -360,14 +373,47 @@ export default async function handler(req, res) {
       }
       prompt = buildImConsultPrompt({ soap });
     } else {
-      // plan (default)
-      if (!soap) {
-        res.status(400).json({ error: "Missing 'soap' field in body" });
-        return;
-      }
-      const injectEvidence = shouldInjectLipidEvidence({ soap, complaint, mode });
-      prompt = buildPlanPrompt({ soap, injectEvidence });
-    }
+  // plan (default)
+  if (!soap) {
+    res.status(400).json({ error: "Missing 'soap' field in body" });
+    return;
+  }
+
+  // ================================
+  // ESC/EAS 2025 risk stratification
+  // ================================
+  const patientForRisk = {
+    ascvd: !!body.ascvd,
+    diabetes: !!body.diabetes,
+    dmTargetOrganDamage: !!body.dmTargetOrganDamage,
+    dmMajorRiskFactorCount:
+      typeof body.dmMajorRiskFactorCount === "number"
+        ? body.dmMajorRiskFactorCount
+        : null,
+    t1dmLongDuration: !!body.t1dmLongDuration,
+
+    ckdEgfr: body.egfr ?? null,
+    sbp: body.sbp ?? null,
+    ldl: body.ldl ?? null,
+
+    // 一般危險因子（⚠️ 不會直接升級為 high risk）
+    hypertension: !!body.hypertension,
+    smoking: !!body.smoking,
+    familyHistoryPrematureASCVD: !!body.familyHistoryPrematureASCVD,
+  };
+
+  const escRisk = escEas2025RiskStratify(patientForRisk);
+
+  // 是否需要注入 lipid guideline
+  const injectEvidence = shouldInjectLipidEvidence({ soap, complaint, mode });
+
+  // 組 prompt（把 ESC risk 結果塞進去）
+  prompt = buildPlanPrompt({
+    soap,
+    injectEvidence,
+    escRisk, // 👈 傳進去
+  });
+}
 
     // Call OpenAI Responses API
     const apiResp = await fetch("https://api.openai.com/v1/responses", {
