@@ -1469,7 +1469,7 @@ const AI_API_URL = "/api/clinic-ai";
 const hxSuggestBtn = document.getElementById("hxSuggestBtn");
 
 // ----------- 共用函式：丟文字給 AI，顯示回覆 -----------
-async function callAIWithText(text) {
+async function callAIWithText(text, mode) {
   const clean = (text || "").trim();
   if (!clean) {
     alert("沒有內容可送出，請先輸入或產生內容。");
@@ -1483,7 +1483,7 @@ async function callAIWithText(text) {
     const resp = await fetch(AI_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ soap: clean })   // 後端欄位名稱仍叫 soap
+      body: JSON.stringify({ soap: clean, mode })  // ✅ 多送 mode
     });
 
     if (!resp.ok) {
@@ -1513,17 +1513,20 @@ async function callAIWithText(text) {
   }
 }
 
-// ----------- 原本 AI 按鈕：從 SOAP 內容送出 -----------
+
+// ----------- Plan：從 Output SOAP 送出（走 guideline-heavy prompt） -----------
 askAiBtn.addEventListener("click", () => {
   const text = output.value.trim();
-  callAIWithText(text);
+  callAIWithText(text, "plan");
 });
 
-// ----------- 自由輸入區塊：從 Doctor note 送出 -----------
+
+// ----------- Next step：從 Free note 送出（走 IM consultant prompt） -----------
 freeAiBtn.addEventListener("click", () => {
   const text = document.getElementById("freeAiInput").value;
-  callAIWithText(text);
+  callAIWithText(text, "im_consult");
 });
+
 
 // ----------- 問診建議按鈕：用 triage 模式，給初診怪怪主訴用 -----------
 hxSuggestBtn.addEventListener("click", async () => {
