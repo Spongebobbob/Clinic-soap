@@ -1,14 +1,10 @@
 // api/clinic-ai.js
 // =====================================================
-// Clinic SOAP AI endpoint (Vercel / Next.js API route)
+// Clinic SOAP AI endpoint
 // Modes:
-// - triage: 問診建議（怪怪主訴）
-// - im_consult: 內科顧問（英文精簡 + DDx + eval + plan）
-// - plan (default): guideline-heavy CDS + Taiwan NHI considerations
-//
-// IMPORTANT:
-// - For lipid-related decisions, this endpoint injects an evidence pack
-//   from ./lipidEvidence.js so the model bases reasoning on YOUR guideline file.
+// - triage: 初診/怪主訴問診建議（中文+英文提示）
+// - im_consult: 內科顧問（英文）
+// - plan (default): 綜合 plan（中文）+ evidence pack + ESC risk engine (hard-locked)
 // =====================================================
 
 import { escEas2025RiskStratify } from "./escRisk.js";
@@ -46,7 +42,7 @@ function buildLipidEvidenceContext() {
     appliesTo: e.appliesTo,
     target: e.target,
     source: `${e.guideline} ${e.year}`,
-    section: e.section,
+    section: e.section ?? null,
     quote: e.quote ?? null,
     note: e.note ?? null,
   }));
@@ -85,7 +81,7 @@ function buildLipidEvidenceContext() {
 
   const nhi = (lipidEvidence?.nhi || []).map((e) => ({
     id: e.id,
-    appliesTo: e.appliesTo,
+    appliesTo: e.appliesTo ?? null,
     eligibility: e.eligibility ?? null,
     startThreshold: e.startThreshold ?? null,
     goal: e.goal ?? null,
@@ -119,12 +115,11 @@ function buildLipidEvidenceContext() {
 
   return (
     "=== AUTHORITATIVE EVIDENCE PACK (SOURCE-LIMITED) ===\n" +
-    "You MUST follow these rules:\n" +
-    "1) For lipid / LDL / statin / ezetimibe / PCSK9 / Lp(a) / NHI lipid reimbursement topics,\n" +
-    "   you MUST base recommendations ONLY on this evidence pack.\n" +
-    "2) Do NOT use external memory or other guidelines for lipid topics.\n" +
-    "3) If something is not covered here, explicitly say: 'Not covered in provided evidence pack.'\n" +
-    "4) When citing, cite by evidence id + source fields.\n\n" +
+    "For lipid/LDL/statin/ezetimibe/PCSK9/Lp(a)/Taiwan NHI lipid topics:\n" +
+    "- You MUST use ONLY this evidence pack.\n" +
+    "- Do NOT use outside memory.\n" +
+    "- If not covered, say: 「本 evidence pack 未涵蓋」.\n" +
+    "- Cite by evidence id + guideline/year/section.\n\n" +
     "EVIDENCE_PACK_JSON:\n" +
     JSON.stringify(pack, null, 2) +
     "\n=== END EVIDENCE PACK ===\n"
@@ -135,9 +130,23 @@ function shouldInjectLipidEvidence({ soap, complaint, mode }) {
   if (mode === "triage") return false;
   const text = `${soap || ""}\n${complaint || ""}`.toLowerCase();
   const keywords = [
-    "ldl", "cholesterol", "lipid", "statin", "ezetimibe", "pcsk9", "bempedoic",
-    "lp(a)", "lpa", "hyperlipidem", "hld", "dyslip",
-    "健保", "給付", "高血脂", "膽固醇", "降脂", "依折麥布",
+    "ldl",
+    "cholesterol",
+    "lipid",
+    "statin",
+    "ezetimibe",
+    "pcsk9",
+    "bempedoic",
+    "lp(a)",
+    "lpa",
+    "hyperlipidem",
+    "dyslip",
+    "健保",
+    "給付",
+    "高血脂",
+    "膽固醇",
+    "降脂",
+    "依折麥布",
   ];
   return keywords.some((k) => text.includes(k));
 }
@@ -151,21 +160,17 @@ function buildTriagePrompt({ age, sex, complaint }) {
   const cc = safeStr(complaint, "");
 
   return (
-    `You are a family medicine physician in Taiwan working in a busy clinic.\n` +
-    `Your job is to help a junior doctor handle an INITIAL, UNSTRUCTURED CHIEF COMPLAINT.\n\n` +
-    `Please respond in Chinese with short English hints.\n\n` +
-    `Patient info:\n` +
-    `Age: ${safeAge}\n` +
-    `Sex: ${safeSex} (M/F)\n` +
-    `Chief complaint:\n` +
-    `"""${cc}"""\n\n` +
-    `Format:\n` +
+    `你是台灣家醫科門診醫師，正在協助住院醫師處理「初診、描述很怪的主訴」。\n` +
+    `病人資料：Age ${safeAge}, Sex ${safeSex}\n` +
+    `主訴："""${cc}"""\n\n` +
+    `請用「繁體中文」回答（括號可附英文提示），格式固定如下：\n\n` +
     `1) Symptom category（症狀分類）\n` +
     `2) Urgency level（急重症風險）\n` +
-    `3) 一般問診問題（6–10 題，中文+括號英文提示）\n` +
+    `3) 一般問診（6–10 題，給我可照念的問句：中文 + 英文提示）\n` +
     `4) Red flags（4–8 題）\n` +
-    `5) PE focus\n` +
-    `6) Differential（3–6 個＋理由）\n`
+    `5) PE focus（條列）\n` +
+    `6) Differential（3–6 個＋一句理由）\n\n` +
+    `限制：不要寫完整病歷，只要問診問題/重點PE/鑑別即可。`
   );
 }
 
@@ -183,48 +188,67 @@ function buildImConsultPrompt({ soap }) {
   );
 }
 
-function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
+function buildPlanPrompt({ soap, injectEvidence, escRisk, isSecondaryPrev }) {
   const evidenceBlock = injectEvidence ? "\n\n" + buildLipidEvidenceContext() + "\n\n" : "";
 
+  // ✅ 這裡是你之前出錯的地方：ternary 一定要用括號包起來
   const escRiskBlock = escRisk
-    ? "\n\n=== ESC/EAS 2025 風險分層（系統判定，請勿自行覆寫） ===\n" +
+    ? "\n=== ESC/EAS 2025 風險分層（系統判定，請勿自行覆寫） ===\n" +
       `風險等級：${escRisk.category}\n` +
       "判定理由：\n" +
       (escRisk.reasons || []).map((r) => `- ${r}`).join("\n") +
       "\nLDL-C 目標（若有明確目標）：\n" +
-      (escRisk.ldlTarget?.mgdl
-        ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL，且至少下降 ${escRisk.ldlTarget.percentReduction}%（${escRisk.ldlTarget.evidenceId || "N/A"}）\n`
-        : "- 本風險層級無明確 LDL-C 數值目標；請以長期風險與共同決策為主。\n") +
+      (
+        escRisk.ldlTarget?.mgdl
+          ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL 且至少下降 ${escRisk.ldlTarget.percentReduction}%（${escRisk.ldlTarget.evidenceId || "N/A"}）\n`
+          : "- 本風險層級無明確 LDL-C 數值目標；請以長期風險與共同決策為主。\n"
+      ) +
       "=== END ESC RISK ===\n\n"
     : "";
 
+  // ✅ 硬鎖：防止模型自行升級成 high risk、亂套 <70/<55
+  const escHardRule =
+    "【硬規則 / Hard rule – ESC risk】\n" +
+    "- 你必須以「上方 escRisk.category」作為唯一 ESC/EAS 風險分層準則。\n" +
+    "- 你不得自行把病人升級為 high / very_high risk。\n" +
+    "- 若 escRisk.category 不是 'high' 或 'very_high'：\n" +
+    "  - 你不得寫 LDL-C 目標 <70 或 <55。\n" +
+    "  - 你不得引用 ESC2025_LDL_HIGH_RISK / ESC2025_LDL_VERY_HIGH_RISK。\n" +
+    "- 若你覺得資料不足：只能列出缺哪些關鍵資料（例如 SBP 是否≥180、eGFR、ASCVD、DM/TOD），不得自行假設。\n\n";
+
+  // ✅ NHI gate：asvc=false 時，不准引用 NHI 2.6.1 secondary prevention 條文
+  const nhiHardRule =
+    "【硬規則 / Hard rule – Taiwan NHI】\n" +
+    `- 本案是否次級預防（ASCVD）：${isSecondaryPrev ? "是" : "否"}。\n` +
+    "- 若非次級預防：你不得引用任何 NHI_2_6_1_*（次級預防條文）。\n" +
+    "- 若 evidence pack 未提供 primary prevention 明確門檻：請明確寫「本 evidence pack 未涵蓋 primary prevention 給付門檻」。\n\n";
+
   return (
     escRiskBlock +
-    "You are a family medicine clinical decision support system practicing in Taiwan.\n\n" +
-    "IMPORTANT RULES:\n" +
-    "- Do NOT invent guidelines or citations.\n" +
-    "- If an evidence pack is provided, use it as the primary source.\n\n" +
-
+    escHardRule +
+    nhiHardRule +
+    "你是台灣家醫科門診的臨床決策支援系統。\n" +
+    "基本原則：安全、可行、可審核；不要捏造指引或引用。\n" +
+    (injectEvidence
+      ? "你已收到 evidence pack（lipid 相關請以 evidence pack 為唯一來源）。\n\n"
+      : "\n") +
     evidenceBlock +
-
     "--------------------------------------------------\n\n" +
-    "Here is a clinic SOAP note:\n\n" +
+    "以下是門診 SOAP：\n\n" +
     soap +
     "\n\n--------------------------------------------------\n\n" +
-
-    "請完成以下輸出（請用【繁體中文】回答，醫學名詞可保留英文）：\n" +
-    "1) 【PI 英文化】把 present illness 寫成流暢精簡英文（門診病歷風格）。\n" +
-    "2) 【Assessment】最可能問題 1–2 行。\n" +
-    "3) 【Differential】3–5 個鑑別＋一句理由。\n" +
-    "4) 【Evaluation】門診可行的 PE / labs / imaging 建議。\n" +
-    "5) 【Plan】分『現在做』與『追蹤再評估』條列。\n" +
-    "6) 【Evidence & Guideline Support】\n" +
-    "   - 若有 evidence pack：請用 evidence id + guideline/year/section。\n" +
-    "   - 必要時可引用 1 句關鍵原文（短句）。\n" +
-    "7) 【Taiwan NHI 給付考量】與醫學建議分開寫。\n\n" +
-
-    "格式要求：\n" +
-    "- 段落標題清楚、條列為主、句子短。\n"
+    "請用【繁體中文】回答（醫學名詞可保留英文縮寫），格式固定如下：\n\n" +
+    "1)【PI 英文化】把 present illness 寫成流暢精簡英文（門診病歷風格）。\n" +
+    "2)【Assessment】最可能問題 1–2 行。\n" +
+    "3)【Differential】3–5 個鑑別＋一句理由。\n" +
+    "4)【Evaluation】門診可行的 PE / labs / imaging 建議。\n" +
+    "5)【Plan】分『現在做』與『追蹤再評估』條列。\n" +
+    "6)【Evidence & Guideline Support】\n" +
+    "   - 若有 evidence pack：只能引用 evidence pack 內容。\n" +
+    "   - 引用格式：evidence id + guideline/year/section（若有）。\n" +
+    "   - 必要時可引用 1 句短原文。\n" +
+    "7)【Taiwan NHI 給付考量】與醫學建議分開段落。\n\n" +
+    "排版要求：段落標題清楚、條列為主、句子短。"
   );
 }
 
@@ -232,6 +256,7 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
 // Main Handler
 // -------------------------
 export default async function handler(req, res) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -247,7 +272,7 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const mode = safeStr(body.mode, "plan"); // triage / im_consult / plan
+    const mode = safeStr(body.mode, "plan");
 
     const soap = safeStr(body.soap, "");
     const complaint = safeStr(body.complaint, "");
@@ -278,12 +303,17 @@ export default async function handler(req, res) {
       }
       prompt = buildImConsultPrompt({ soap });
     } else {
+      // plan
       if (!soap) {
         res.status(400).json({ error: "Missing 'soap' field in body" });
         return;
       }
 
-      const patientForRisk = {
+      // ✅ 重要：NHI 2.6.1 是 secondary prevention；用 ascvd gate
+      const isSecondaryPrev = !!body.ascvd;
+
+      // ✅ ESC risk engine input：盡量用前端傳的結構化欄位
+      const patientForRisk = compact({
         ascvd: !!body.ascvd,
         diabetes: !!body.diabetes,
         dmTargetOrganDamage: !!body.dmTargetOrganDamage,
@@ -293,17 +323,26 @@ export default async function handler(req, res) {
         ckdEgfr: body.egfr ?? null,
         sbp: body.sbp ?? null,
         ldl: body.ldl ?? null,
+
+        // 一般 RF（只用於 moderate/low 判斷，不會直接升級 high）
         hypertension: !!body.hypertension,
         smoking: !!body.smoking,
         familyHistoryPrematureASCVD: !!body.familyHistoryPrematureASCVD,
-      };
+      });
 
       const escRisk = escEas2025RiskStratify(patientForRisk);
+
       const injectEvidence = shouldInjectLipidEvidence({ soap, complaint, mode });
 
-      prompt = buildPlanPrompt({ soap, injectEvidence, escRisk });
+      prompt = buildPlanPrompt({
+        soap,
+        injectEvidence,
+        escRisk,
+        isSecondaryPrev,
+      });
     }
 
+    // OpenAI Responses API
     const apiResp = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
