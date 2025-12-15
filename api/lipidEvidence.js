@@ -379,6 +379,96 @@ export const lipidEvidence = {
       note:
         "Operational NHI threshold (not verbatim in uploaded excerpt). Use for decision support; confirm against official table if needed.",
     },
+    // --- Taiwan NHI reimbursement: LDL/TC (from the official table you provided) ---
+{
+  id: "NHI_LDL_SEC_PREV_ACS_OR_CAD_1080201",
+  appliesTo: "Secondary prevention: ACS history, PCI/CABG, or coronary atherosclerotic disease",
+  nonPharm: "Nonpharm and drug therapy can be concurrent",
+  startThreshold: { ldl_mgdl_gte: 70 },
+  goal: { ldl_mgdl_lt: 70 },
+  followUp: "Year 1: lipid check q3–6 months; Year ≥2: at least q6–12 months; monitor adverse effects (e.g., liver function abnormality, rhabdomyolysis).",
+  source: "Taiwan NHI lipid-lowering reimbursement table (108/2/1)",
+  quote: null,
+},
+
+{
+  id: "NHI_LDL_CVD_OR_DM",
+  appliesTo: "Patients with cardiovascular disease or diabetes",
+  nonPharm: "Nonpharm and drug therapy can be concurrent",
+  startThreshold: { tc_mgdl_gte: 160, or_ldl_mgdl_gte: 100 },
+  goal: { tc_mgdl_lt: 160, or_ldl_mgdl_lt: 100 },
+  source: "Taiwan NHI lipid-lowering reimbursement table",
+  quote: null,
+},
+
+{
+  id: "NHI_LDL_PRIMARY_PREV_RF_GTE2",
+  appliesTo: "Primary prevention with ≥2 risk factors",
+  nonPharm: "3–6 months lifestyle/nonpharmacologic therapy before starting medication",
+  startThreshold: { tc_mgdl_gte: 200, or_ldl_mgdl_gte: 130 },
+  goal: { tc_mgdl_lt: 200, or_ldl_mgdl_lt: 130 },
+  source: "Taiwan NHI lipid-lowering reimbursement table",
+  quote: null,
+},
+
+{
+  id: "NHI_LDL_PRIMARY_PREV_RF_EQ1",
+  appliesTo: "Primary prevention with 1 risk factor",
+  nonPharm: "3–6 months lifestyle/nonpharmacologic therapy before starting medication",
+  startThreshold: { tc_mgdl_gte: 240, or_ldl_mgdl_gte: 160 },
+  goal: { tc_mgdl_lt: 240, or_ldl_mgdl_lt: 160 },
+  source: "Taiwan NHI lipid-lowering reimbursement table",
+  quote: null,
+},
+
+{
+  id: "NHI_LDL_PRIMARY_PREV_RF_EQ0",
+  appliesTo: "Primary prevention with 0 risk factors",
+  nonPharm: "3–6 months lifestyle/nonpharmacologic therapy before starting medication",
+  startThreshold: { ldl_mgdl_gte: 190 },
+  goal: { ldl_mgdl_lt: 190 },
+  source: "Taiwan NHI lipid-lowering reimbursement table",
+  quote: null,
+},
+
+// --- Taiwan NHI reimbursement: Triglyceride-lowering (from the TG table you provided) ---
+{
+  id: "NHI_TG_CVD_OR_DM",
+  appliesTo: "Patients with cardiovascular disease or diabetes",
+  nonPharm: "Nonpharm and drug therapy can be concurrent",
+  startThreshold: {
+    tg_mgdl_gte: 200,
+    and_either: ["tc_hdl_ratio_gt_5", "hdl_mgdl_lt_40"],
+  },
+  goal: { tg_mgdl_lt: 200 },
+  followUp: "Year 1: q3–6 months; Year ≥2: at least q6–12 months; monitor adverse effects (e.g., liver function abnormality, rhabdomyolysis).",
+  source: "Taiwan NHI triglyceride-lowering reimbursement table",
+  quote: null,
+},
+
+{
+  id: "NHI_TG_NO_CVD_TG_GTE200_WITH_DYSRATIO_OR_LOWHDL",
+  appliesTo: "No cardiovascular disease",
+  nonPharm: "3–6 months lifestyle/nonpharmacologic therapy before starting medication",
+  startThreshold: {
+    tg_mgdl_gte: 200,
+    and_either: ["tc_hdl_ratio_gt_5", "hdl_mgdl_lt_40"],
+  },
+  goal: { tg_mgdl_lt: 200 },
+  source: "Taiwan NHI triglyceride-lowering reimbursement table",
+  quote: null,
+},
+
+{
+  id: "NHI_TG_NO_CVD_TG_GTE500",
+  appliesTo: "No cardiovascular disease",
+  nonPharm: "Nonpharm and drug therapy can be concurrent",
+  startThreshold: { tg_mgdl_gte: 500 },
+  goal: { tg_mgdl_lt: 500 },
+  source: "Taiwan NHI triglyceride-lowering reimbursement table",
+  quote: null,
+},
+
   ],
 };
 
@@ -390,49 +480,35 @@ export const lipidEvidence = {
 
 export const nhiRiskFactors = [
   {
-    id: "NHI_RF_AGE_MALE",
-    name: "Age (male)",
-    definition: "Male age ≥45 years",
-    quote: null,
-    source: "NHI reimbursement practice (operational)",
-  },
-  {
-    id: "NHI_RF_AGE_FEMALE",
-    name: "Age (female)",
-    definition: "Female age ≥55 years",
-    quote: null,
-    source: "NHI reimbursement practice (operational)",
-  },
-  {
-    id: "NHI_RF_HYPERTENSION",
+    id: "NHI_RF_HTN",
     name: "Hypertension",
-    definition: "Diagnosed hypertension or current antihypertensive medication use",
+    definition: "高血壓",
+    source: "Taiwan NHI lipid-lowering reimbursement table",
     quote: null,
-    source: "NHI reimbursement practice (operational)",
   },
   {
-    id: "NHI_RF_DIABETES",
-    name: "Diabetes mellitus",
-    definition: "Diagnosed diabetes mellitus",
+    id: "NHI_RF_AGE",
+    name: "Age threshold",
+    definition: "男性 ≥45 歲；女性 ≥55 歲或停經者",
+    source: "Taiwan NHI lipid-lowering reimbursement table",
     quote: null,
-    source: "NHI reimbursement practice (operational)",
   },
   {
-    id: "NHI_RF_SMOKING",
-    name: "Smoking",
-    definition: "Current cigarette smoking",
+    id: "NHI_RF_FH_PREMATURE_CAD",
+    name: "Family history of premature CAD",
+    definition: "早發性冠心病家族史：男性 ≤55 歲；女性 ≤65 歲",
+    source: "Taiwan NHI lipid-lowering reimbursement table",
     quote: null,
-    source: "NHI reimbursement practice (operational)",
   },
   {
-    id: "NHI_RF_FAMILY_HISTORY",
-    name: "Family history of premature ASCVD",
-    definition:
-      "First-degree relative with premature ASCVD (male <55 years, female <65 years)",
+    id: "NHI_RF_LOW_HDL",
+    name: "Low HDL-C",
+    definition: "HDL-C < 40 mg/dL",
+    source: "Taiwan NHI lipid-lowering reimbursement table",
     quote: null,
-    source: "NHI reimbursement practice (operational)",
   },
 ];
+
 
 // ==================================================
 // ENGINE HELPERS (NO LLM REQUIRED)
