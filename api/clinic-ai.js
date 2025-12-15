@@ -295,10 +295,13 @@ function buildPlanPrompt({ soap, injectEvidence }) {
 
     "--------------------------------------------------\n\n" +
     "Formatting requirements:\n" +
-    "- Use clear section headers.\n" +
-    "- Keep the total output concise and readable.\n" +
-    "- Prioritize clinical usefulness over completeness.\n" +
-    "- Write in professional, neutral medical English."
+"Formatting & language requirements:\n" +
+"- 請使用【繁體中文】回答，醫學名詞可保留英文（如 LDL-C、ASCVD、Lp(a)、statin）。\n" +
+"- 使用清楚的段落標題與條列式重點，方便臨床快速閱讀。\n" +
+"- 句子請簡短、直接，避免長句與過度學術化表達。\n" +
+"- 優先呈現『臨床可行性』與『實際決策重點』，而非理論完整性。\n" +
+"- Guideline 與條文引用請保留英文原名與年份（例如 ESC/EAS 2025、NHI 2.6.1）。\n" +
+"- Taiwan NHI 給付規定請與醫學建議【分開段落】說明，避免混淆。\n"
   );
 }
 
