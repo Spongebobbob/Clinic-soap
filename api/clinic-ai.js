@@ -79,78 +79,92 @@ export default async function handler(req, res) {
         `- 假設醫師只有 3–5 分鐘可以問問題，請挑「最有用、最有資訊量」的問題。\n` +
         `- 重點是讓醫師在遇到罕見或怪怪的主訴時，不會腦袋一片空白。\n`;
 
-    // ====== 模式二：原本 SOAP 潤飾 / Plan 建議 ======
-    } else {
-      if (!soap || typeof soap !== "string") {
-        res.status(400).json({ error: "Missing 'soap' field in body" });
-        return;
-      }
+   // ====== 模式二：SOAP 類（Plan / Next step） ======
+} else {
+  if (!soap || typeof soap !== "string") {
+    res.status(400).json({ error: "Missing 'soap' field in body" });
+    return;
+  }
 
-      prompt =
-        "You are a family medicine clinical decision support system practicing in Taiwan.\n\n" +
+  // ✅ Next step 用：IM consultant prompt
+  if (mode === "im_consult") {
+    prompt =
+      "You are an internal medicine consultant.\n" +
+      "Here is a clinic SOAP note:\n\n" +
+      soap +
+      "\n\nPlease:\n" +
+      "1) Rewrite the \"PI\" (present illness) section into fluent, concise English, as if written by a native internal-medicine physician for a clinic note.\n" +
+      "2) List likely diagnoses with brief reasoning.\n" +
+      "3) Suggest key physical exams and tests.\n" +
+      "4) Provide an initial management plan.\n" +
+      "Answer in concise English bullet points.";
+  } else {
+    // ✅ Plan（預設）：沿用你原本 guideline-heavy prompt（完整保留）
+    prompt =
+      "You are a family medicine clinical decision support system practicing in Taiwan.\n\n" +
 
-"You are assisting a physician in an outpatient clinic with limited time.\n" +
-"Your goal is to provide SAFE, GUIDELINE-BASED, and PRACTICAL recommendations.\n\n" +
+      "You are assisting a physician in an outpatient clinic with limited time.\n" +
+      "Your goal is to provide SAFE, GUIDELINE-BASED, and PRACTICAL recommendations.\n\n" +
 
-"IMPORTANT RULES (must follow):\n" +
-"- Base your recommendations on established international clinical guidelines (e.g., ACC/AHA, ESC/EAS, ADA, KDIGO, CANMAT, VA/DoD, NICE).\n" +
-"- If a recommendation is guideline-based, you MUST explicitly cite the guideline name and year.\n" +
-"- If Taiwan National Health Insurance (NHI) reimbursement rules are relevant, list them separately and clearly.\n" +
-"- Do NOT invent guidelines or citations.\n" +
-"- If evidence is uncertain or guideline recommendations differ, state this explicitly.\n" +
-"- Be concise and clinically realistic.\n\n" +
+      "IMPORTANT RULES (must follow):\n" +
+      "- Base your recommendations on established international clinical guidelines (e.g., ACC/AHA, ESC/EAS, ADA, KDIGO, CANMAT, VA/DoD, NICE).\n" +
+      "- If a recommendation is guideline-based, you MUST explicitly cite the guideline name and year.\n" +
+      "- If Taiwan National Health Insurance (NHI) reimbursement rules are relevant, list them separately and clearly.\n" +
+      "- Do NOT invent guidelines or citations.\n" +
+      "- If evidence is uncertain or guideline recommendations differ, state this explicitly.\n" +
+      "- Be concise and clinically realistic.\n\n" +
 
-"--------------------------------------------------\n\n" +
+      "--------------------------------------------------\n\n" +
 
-"Here is a clinic SOAP note:\n\n" +
-soap +
-"\n\n" +
+      "Here is a clinic SOAP note:\n\n" +
+      soap +
+      "\n\n" +
 
-"--------------------------------------------------\n\n" +
+      "--------------------------------------------------\n\n" +
 
-"Please do the following:\n\n" +
+      "Please do the following:\n\n" +
 
-"1) Rewrite the \"PI\" (present illness) section into fluent, concise English,\n" +
-"   as if written by a native internal medicine physician for a clinic note.\n\n" +
+      "1) Rewrite the \"PI\" (present illness) section into fluent, concise English,\n" +
+      "   as if written by a native internal medicine physician for a clinic note.\n\n" +
 
-"2) Assessment:\n" +
-"   - Summarize the most likely working diagnosis or clinical problem in 1–2 lines.\n" +
-"   - Prioritize by clinical importance and risk.\n\n" +
+      "2) Assessment:\n" +
+      "   - Summarize the most likely working diagnosis or clinical problem in 1–2 lines.\n" +
+      "   - Prioritize by clinical importance and risk.\n\n" +
 
-"3) Differential diagnoses (if applicable):\n" +
-"   - List 3–5 reasonable differentials.\n" +
-"   - Give one short justification for each.\n\n" +
+      "3) Differential diagnoses (if applicable):\n" +
+      "   - List 3–5 reasonable differentials.\n" +
+      "   - Give one short justification for each.\n\n" +
 
-"4) Suggested evaluation:\n" +
-"   - Key physical examinations to focus on.\n" +
-"   - Key laboratory tests or imaging if indicated.\n" +
-"   - Keep this practical for an outpatient clinic.\n\n" +
+      "4) Suggested evaluation:\n" +
+      "   - Key physical examinations to focus on.\n" +
+      "   - Key laboratory tests or imaging if indicated.\n" +
+      "   - Keep this practical for an outpatient clinic.\n\n" +
 
-"5) Management plan:\n" +
-"   - Provide an initial, stepwise management plan.\n" +
-"   - Use bullet points.\n" +
-"   - Clearly distinguish between what should be done now and what to reassess later.\n\n" +
+      "5) Management plan:\n" +
+      "   - Provide an initial, stepwise management plan.\n" +
+      "   - Use bullet points.\n" +
+      "   - Clearly distinguish between what should be done now and what to reassess later.\n\n" +
 
-"6) Evidence & guideline support (MANDATORY SECTION):\n" +
-"   - Cite relevant guideline(s) with full name and year.\n" +
-"   - Specify the section or table if known.\n" +
-"   - Quote ONE key sentence verbatim when appropriate.\n" +
-"   - If multiple guidelines apply, briefly explain their relationship.\n\n" +
+      "6) Evidence & guideline support (MANDATORY SECTION):\n" +
+      "   - Cite relevant guideline(s) with full name and year.\n" +
+      "   - Specify the section or table if known.\n" +
+      "   - Quote ONE key sentence verbatim when appropriate.\n" +
+      "   - If multiple guidelines apply, briefly explain their relationship.\n\n" +
 
-"7) Taiwan NHI reimbursement considerations (if applicable):\n" +
-"   - State whether the recommended treatment is NHI-covered.\n" +
-"   - List key reimbursement criteria or target thresholds if relevant.\n" +
-"   - Clearly distinguish medical recommendation from reimbursement limitation.\n\n" +
+      "7) Taiwan NHI reimbursement considerations (if applicable):\n" +
+      "   - State whether the recommended treatment is NHI-covered.\n" +
+      "   - List key reimbursement criteria or target thresholds if relevant.\n" +
+      "   - Clearly distinguish medical recommendation from reimbursement limitation.\n\n" +
 
-"--------------------------------------------------\n\n" +
+      "--------------------------------------------------\n\n" +
 
-"Formatting requirements:\n" +
-"- Use clear section headers.\n" +
-"- Keep the total output concise and readable.\n" +
-"- Prioritize clinical usefulness over completeness.\n" +
-"- Write in professional, neutral medical English.";
-
-    }
+      "Formatting requirements:\n" +
+      "- Use clear section headers.\n" +
+      "- Keep the total output concise and readable.\n" +
+      "- Prioritize clinical usefulness over completeness.\n" +
+      "- Write in professional, neutral medical English.";
+  }
+}
 
     // 呼叫 OpenAI（/v1/responses）
     const apiResp = await fetch("https://api.openai.com/v1/responses", {
