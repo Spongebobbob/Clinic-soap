@@ -12,6 +12,7 @@ import {
   lipidEvidence,
   nhiRiskFactors,
   escStatinDoseSuggestion,
+  getNhiEligibilityFromSoap,
 } from "./lipidEvidence.js";
 
 
@@ -193,7 +194,7 @@ function buildImConsultPrompt({ soap }) {
   );
 }
 
-function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
+function buildPlanPrompt({ soap, injectEvidence, escRisk, nhi }) {
   const evidenceBlock = injectEvidence
     ? "\n\n" + buildLipidEvidenceContext() + "\n\n"
     : "";
@@ -240,9 +241,17 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
 
     evidenceBlock +
 
-    "--------------------------------------------------\n\n" +
-    "Here is a clinic SOAP note:\n\n" +
-    soap +
+"\n\n[NHI auto-check]\n" +
+`category: ${nhi?.category ?? "unknown"}\n` +
+`eligible: ${typeof nhi?.eligible === "boolean" ? nhi.eligible : "unknown"}\n` +
+`LDL: ${nhi?.ldl_mgdl ?? "unknown"}\n` +
+`risk factors: ${nhi?.riskFactorCount ?? "unknown"}\n` +
+`matched: ${Array.isArray(nhi?.matchedRiskFactors) ? nhi.matchedRiskFactors.map(x => x.label).join(", ") : "unknown"}\n\n` +
+
+"--------------------------------------------------\n\n" +
+"Here is a clinic SOAP note:\n\n" +
+soap +
+
     "\n\n" +
     "--------------------------------------------------\n\n" +
 
@@ -253,7 +262,13 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
     "（規則：不得重述 Plan；不得提 Lp(a)；不得提 ezetimibe/PCSK9）\n" +
     "   - 每一小點僅限【一句話＋evidence id】，禁止重述 Plan 或 lab interpretation。\n" +
     "（額外規則：若 SOAP 中出現 LDL-C ≥190 mg/dL，Evidence 句子不得使用 'low risk' 字樣；請改寫為 'Severe hypercholesterolemia (LDL-C ≥190) without major ESC high/very-high risk features'，並仍需附 1 個 ESC evidence id）\n" +
-    "3)【Taiwan NHI 給付考量】僅輸出 1 行、格式固定如下（超出視為錯誤）：\n- Eligible/Not eligible: <門檻數值> (<單一 NHI evidence id>)\n" +
+    "【硬規則】Taiwan NHI 請完全依照上方 [NHI auto-check] 的 category 與 risk factors 選擇『唯一正確』的 evidence id：\n" +
+"- primary_prevention 且 risk factors = 0 → 用 NHI_LDL_PRIMARY_PREV_RF_EQ0\n" +
+"- primary_prevention 且 risk factors = 1 → 用 NHI_LDL_PRIMARY_PREV_RF_EQ1\n" +
+"- primary_prevention 且 risk factors ≥2 → 用 NHI_LDL_PRIMARY_PREV_RF_GTE2\n" +
+"- secondary_prevention → 用 NHI_LDL_SEC_PREV_ACS_OR_CAD_1080201\n" +
+"不得自行改風險因子數；不得忽略年齡風險因子。\n\n" +
+"3)【Taiwan NHI 給付考量】僅輸出 1 行、格式固定如下（超出視為錯誤）：\n- Eligible/Not eligible: <門檻數值> (<單一 NHI evidence id>)\n" +
 "（規則：不得同時寫 Eligible 與 Not eligible；不得解釋門檻推導；不得提 secondary prevention 除非 SOAP 明確有 ASCVD/ACS/PCI/CABG）\n"
 
 
@@ -320,6 +335,8 @@ export default async function handler(req, res) {
 
       // ✅ 重要：NHI 2.6.1 是 secondary prevention；用 ascvd gate
       const isSecondaryPrev = !!body.ascvd;
+      // ✅ NHI auto-check from SOAP (primary/secondary + riskFactorCount + threshold)
+      const nhi = getNhiEligibilityFromSoap(soap);
 
       // ✅ ESC risk engine input：盡量用前端傳的結構化欄位
       const patientForRisk = compact({
@@ -348,6 +365,7 @@ export default async function handler(req, res) {
         injectEvidence,
         escRisk,
         isSecondaryPrev,
+        nhi,
       });
     }
 
