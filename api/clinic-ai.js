@@ -248,11 +248,13 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
 
     "請用【繁體中文】回答（醫學名詞可保留英文，如 LDL-C、ASCVD、Lp(a)、statin）。\n" +
     "請務必包含以下段落（用清楚標題＋條列）：\n" +
-    "1)【Plan】分『現在做』與『下次追蹤』。\n" +
+    "1)【Plan】僅列出【實際要做的醫囑】（藥物、劑量、追蹤），禁止重複解釋檢驗數值或風險判定；每個 bullet 不超過 1 行。\n" +
     "2)【Evidence & Guideline Support】\n" +
     "   - 若有 evidence pack：只用 evidence pack，引用請用 evidence id（例如 NHI_xxx、ESC2025_xxx）。\n" +
-    "3)【Taiwan NHI 給付考量】\n" +
-    "   - 只根據 evidence pack 的 NHI 條文/表格列出『是否符合』與『缺哪些條件』，不要自行腦補。\n"
+    "   - 每一小點僅限【一句話＋evidence id】，禁止重述 Plan 或 lab interpretation。\n" +
+    "7)【Taiwan NHI 給付考量】\n" +
+    "   - 僅用【是 / 否 + 門檻值 + evidence id】條列，不得重複醫學建議或 ESC 內容。\n"
+
   );
 }
 
