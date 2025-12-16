@@ -188,69 +188,57 @@ function buildImConsultPrompt({ soap }) {
   );
 }
 
-function buildPlanPrompt({ soap, injectEvidence, escRisk, isSecondaryPrev }) {
-  const evidenceBlock = injectEvidence ? "\n\n" + buildLipidEvidenceContext() + "\n\n" : "";
+function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
+  const evidenceBlock = injectEvidence
+    ? "\n\n" + buildLipidEvidenceContext() + "\n\n"
+    : "";
 
-  // ✅ 這裡是你之前出錯的地方：ternary 一定要用括號包起來
   const escRiskBlock = escRisk
-    ? "\n=== ESC/EAS 2025 風險分層（系統判定，請勿自行覆寫） ===\n" +
+    ? "\n\n=== ESC/EAS 2025 風險分層（系統判定，請勿自行覆寫） ===\n" +
       `風險等級：${escRisk.category}\n` +
       "判定理由：\n" +
-      (escRisk.reasons || []).map((r) => `- ${r}`).join("\n") +
-      "\nLDL-C 目標（若有明確目標）：\n" +
-      (
-        escRisk.ldlTarget?.mgdl
-          ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL 且至少下降 ${escRisk.ldlTarget.percentReduction}%（${escRisk.ldlTarget.evidenceId || "N/A"}）\n`
-          : "- 本風險層級無明確 LDL-C 數值目標；請以長期風險與共同決策為主。\n"
-      ) +
+      (Array.isArray(escRisk.reasons) ? escRisk.reasons.map((r) => `- ${r}`).join("\n") : "- (no reasons)") +
+      "\n\nLDL-C 目標：\n" +
+      (escRisk.ldlTarget?.mgdl
+        ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL，且至少下降 ${escRisk.ldlTarget.percentReduction}%（${escRisk.ldlTarget.evidenceId || "N/A"}）\n`
+        : "- 本風險層級無明確 LDL-C 數值目標；請以長期風險與共同決策為主。\n") +
       "=== END ESC RISK ===\n\n"
     : "";
 
-  // ✅ 硬鎖：防止模型自行升級成 high risk、亂套 <70/<55
-  const escHardRule =
-    "【硬規則 / Hard rule – ESC risk】\n" +
-    "- 你必須以「上方 escRisk.category」作為唯一 ESC/EAS 風險分層準則。\n" +
-    "- 你不得自行把病人升級為 high / very_high risk。\n" +
-    "- 若 escRisk.category 不是 'high' 或 'very_high'：\n" +
-    "  - 你不得寫 LDL-C 目標 <70 或 <55。\n" +
-    "  - 你不得引用 ESC2025_LDL_HIGH_RISK / ESC2025_LDL_VERY_HIGH_RISK。\n" +
-    "- 若你覺得資料不足：只能列出缺哪些關鍵資料（例如 SBP 是否≥180、eGFR、ASCVD、DM/TOD），不得自行假設。\n\n";
-
-  // ✅ NHI gate：asvc=false 時，不准引用 NHI 2.6.1 secondary prevention 條文
-  const nhiHardRule =
-    "【硬規則 / Hard rule – Taiwan NHI】\n" +
-    `- 本案是否次級預防（ASCVD）：${isSecondaryPrev ? "是" : "否"}。\n` +
-    "- 若非次級預防：你不得引用任何 NHI_2_6_1_*（次級預防條文）。\n" +
-    "- 若 evidence pack 未提供 primary prevention 明確門檻：請明確寫「本 evidence pack 未涵蓋 primary prevention 給付門檻」。\n\n";
-
   return (
     escRiskBlock +
-    escHardRule +
-    nhiHardRule +
-    "你是台灣家醫科門診的臨床決策支援系統。\n" +
-    "基本原則：安全、可行、可審核；不要捏造指引或引用。\n" +
-    (injectEvidence
-      ? "你已收到 evidence pack（lipid 相關請以 evidence pack 為唯一來源）。\n\n"
-      : "\n") +
+    "You are a family medicine clinical decision support system practicing in Taiwan.\n\n" +
+    "You are assisting a physician in an outpatient clinic with limited time.\n" +
+    "Your goal is to provide SAFE, GUIDELINE-BASED, and PRACTICAL recommendations.\n\n" +
+
+    "IMPORTANT RULES (must follow):\n" +
+    "- If you are provided an evidence pack, you MUST use it as the primary source.\n" +
+    "- Do NOT invent guidelines or citations.\n" +
+    "- If something is not covered in the evidence pack, explicitly say: 'Not covered in provided evidence pack.'\n" +
+    "- Taiwan NHI 給付規定請與醫學建議分開段落說明。\n\n" +
+
     evidenceBlock +
+
     "--------------------------------------------------\n\n" +
-    "以下是門診 SOAP：\n\n" +
+    "Here is a clinic SOAP note:\n\n" +
     soap +
-    "\n\n--------------------------------------------------\n\n" +
-    "請用【繁體中文】回答（醫學名詞可保留英文縮寫），格式固定如下：\n\n" +
-    "1)【PI 英文化】把 present illness 寫成流暢精簡英文（門診病歷風格）。\n" +
-    "2)【Assessment】最可能問題 1–2 行。\n" +
-    "3)【Differential】3–5 個鑑別＋一句理由。\n" +
-    "4)【Evaluation】門診可行的 PE / labs / imaging 建議。\n" +
-    "5)【Plan】分『現在做』與『追蹤再評估』條列。\n" +
+    "\n\n" +
+    "--------------------------------------------------\n\n" +
+
+    "請用【繁體中文】回答（醫學名詞可保留英文，如 LDL-C、ASCVD、Lp(a)、statin）。\n" +
+    "請務必包含以下段落（用清楚標題＋條列）：\n" +
+    "1)【PI 英文化】把 PI 改寫成精簡自然英文（像內科門診病歷）。\n" +
+    "2)【Assessment】用 1–2 行說明主要問題。\n" +
+    "3)【Differential】3–5 個鑑別診斷（每個 1 行理由）。\n" +
+    "4)【Evaluation】門診可行的 PE/檢查。\n" +
+    "5)【Plan】分『現在做』與『下次追蹤』。\n" +
     "6)【Evidence & Guideline Support】\n" +
-    "   - 若有 evidence pack：只能引用 evidence pack 內容。\n" +
-    "   - 引用格式：evidence id + guideline/year/section（若有）。\n" +
-    "   - 必要時可引用 1 句短原文。\n" +
-    "7)【Taiwan NHI 給付考量】與醫學建議分開段落。\n\n" +
-    "排版要求：段落標題清楚、條列為主、句子短。"
+    "   - 若有 evidence pack：只用 evidence pack，引用請用 evidence id（例如 NHI_xxx、ESC2025_xxx）。\n" +
+    "7)【Taiwan NHI 給付考量】\n" +
+    "   - 只根據 evidence pack 的 NHI 條文/表格列出『是否符合』與『缺哪些條件』，不要自行腦補。\n"
   );
 }
+
 
 // -------------------------
 // Main Handler
