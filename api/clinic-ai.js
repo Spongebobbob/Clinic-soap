@@ -198,10 +198,10 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
       `風險等級：${escRisk.category}\n` +
       "判定理由：\n" +
       (Array.isArray(escRisk.reasons) ? escRisk.reasons.map((r) => `- ${r}`).join("\n") : "- (no reasons)") +
-      "\n\nLDL-C 目標：\n" +
+      "\n\nESC 醫學建議 LDL-C 目標（⚠️非 Taiwan NHI 給付目標/門檻）：\n" +
       (escRisk.ldlTarget?.mgdl
-        ? `- LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL，且至少下降 ${escRisk.ldlTarget.percentReduction}%（${escRisk.ldlTarget.evidenceId || "N/A"}）\n`
-        : "- 本風險層級無明確 LDL-C 數值目標；請以長期風險與共同決策為主。\n") +
+        ? `- (ESC) LDL-C < ${escRisk.ldlTarget.mgdl} mg/dL，且至少下降 ${escRisk.ldlTarget.percentReduction}%（${escRisk.ldlTarget.evidenceId || "N/A"}）\n`
+        : "- (ESC) 此風險層級未設定強制 LDL-C 數值目標；⚠️這不代表 Taiwan NHI 沒有門檻/目標，NHI 請只看 evidence pack。\n") +
       "=== END ESC RISK ===\n\n"
     : "";
 
@@ -216,6 +216,11 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
     "- Do NOT invent guidelines or citations.\n" +
     "- If something is not covered in the evidence pack, explicitly say: 'Not covered in provided evidence pack.'\n" +
     "- Taiwan NHI 給付規定請與醫學建議分開段落說明。\n\n" +
+
+    "- 在【Evidence & Guideline Support】中必須分成兩個子段落：\n" +
+"  (A) ESC/EAS 2025（醫學風險/治療策略）\n" +
+"  (B) Taiwan NHI（給付門檻/給付目標/追蹤規定）\n" +
+"- Taiwan NHI 的『風險因子』一律以 evidence pack 的 taiwanNhiRiskFactors 清單為準，不得寫「不確定/需確認」來否認已列出的風險因子（例如 Low HDL-C <40）。\n\n" +
 
     evidenceBlock +
 
