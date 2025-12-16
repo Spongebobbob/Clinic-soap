@@ -245,6 +245,16 @@ Sex:
 </div>
 
 <script>
+
+  // ========================== HLP core questions ==========================
+const hlpCoreQuestions = [
+  { id: "hx_dm",    labelZh: "是否有糖尿病（DM）？診斷多久？最近 HbA1c？" },
+  { id: "hx_hld",   labelZh: "是否有高血脂（HLD）？是否正在使用 statin？" },
+  { id: "hx_ascvd", labelZh: "是否有心血管疾病史（MI / PCI / Stroke / PAD）？" },
+  { id: "hx_ckd",   labelZh: "是否有慢性腎臟病（CKD）？最近 eGFR？" },
+  { id: "hx_smoke", labelZh: "是否吸菸？（目前 / 曾經 / 否）" }
+];
+
 // ========================== Templates ==========================
 const templates = {
   // ---- 原本：sore throat / fever / abd pain ----
@@ -997,6 +1007,28 @@ ccSelect.addEventListener("change", () => {
     historyArea.appendChild(label);
     historyArea.appendChild(input);
   });
+    // ===== HLP core questions (for chronic disease follow-up) =====
+  if (["htn_fup", "lipid_fup", "dm_fup"].includes(key)) {
+    const hr = document.createElement("hr");
+    hr.style.margin = "12px 0";
+    historyArea.appendChild(hr);
+
+    const title = document.createElement("strong");
+    title.textContent = "慢病核心檢核（HLP）";
+    historyArea.appendChild(title);
+
+    hlpCoreQuestions.forEach(q => {
+      const label = document.createElement("label");
+      label.textContent = q.labelZh;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.id = "q_" + q.id;
+      input.style.width = "80%";
+      historyArea.appendChild(label);
+      historyArea.appendChild(input);
+    });
+  }
+
 });
 
 // ========================== Helper: build PI sentence ==========================
