@@ -245,16 +245,6 @@ Sex:
 </div>
 
 <script>
-
-  // ========================== HLP core questions ==========================
-const hlpCoreQuestions = [
-  { id: "hx_dm",    labelZh: "是否有糖尿病（DM）？診斷多久？最近 HbA1c？" },
-  { id: "hx_hld",   labelZh: "是否有高血脂（HLD）？是否正在使用 statin？" },
-  { id: "hx_ascvd", labelZh: "是否有心血管疾病史（MI / PCI / Stroke / PAD）？" },
-  { id: "hx_ckd",   labelZh: "是否有慢性腎臟病（CKD）？最近 eGFR？" },
-  { id: "hx_smoke", labelZh: "是否吸菸？（目前 / 曾經 / 否）" }
-];
-
 // ========================== Templates ==========================
 const templates = {
   // ---- 原本：sore throat / fever / abd pain ----
@@ -752,7 +742,7 @@ dizziness: {
   },
 
   // ---- Chronic disease follow-up ----
-  htn_fu: {
+  htn_fup: {
     nameEn: "hypertension follow-up",
     history: [
       { id:"duration",  labelEn:"Duration since diagnosis", labelZh:"高血壓診斷多久？" },
@@ -769,7 +759,7 @@ dizziness: {
     ]
   },
 
-  dm_fu: {
+  dm_fup: {
     nameEn: "diabetes follow-up",
     history: [
       { id:"duration",  labelEn:"Duration since diagnosis", labelZh:"糖尿病診斷多久？" },
@@ -787,7 +777,7 @@ dizziness: {
     ]
   },
 
-  lipid_fu: {
+  lipid_fup: {
     nameEn: "hyperlipidemia follow-up",
     history: [
       { id:"duration",   labelEn:"Duration",             labelZh:"高血脂診斷多久？" },
@@ -1007,28 +997,6 @@ ccSelect.addEventListener("change", () => {
     historyArea.appendChild(label);
     historyArea.appendChild(input);
   });
-    // ===== HLP core questions (for chronic disease follow-up) =====
-if (key === "lipid_fu") {
-    const hr = document.createElement("hr");
-    hr.style.margin = "12px 0";
-    historyArea.appendChild(hr);
-
-    const title = document.createElement("strong");
-    title.textContent = "慢病核心檢核（HLP）";
-    historyArea.appendChild(title);
-
-    hlpCoreQuestions.forEach(q => {
-      const label = document.createElement("label");
-      label.textContent = q.labelZh;
-      const input = document.createElement("input");
-      input.type = "text";
-      input.id = "q_" + q.id;
-      input.style.width = "80%";
-      historyArea.appendChild(label);
-      historyArea.appendChild(input);
-    });
-  }
-
 });
 
 // ========================== Helper: build PI sentence ==========================
@@ -1264,20 +1232,20 @@ function buildPiSentence(key, tpl, answers, age, sex) {
     if (answers["weight"])     fragments.push(`weight loss/night sweats: ${answers["weight"]}`);
     if (answers["travel"])     fragments.push(`travel/exposure: ${answers["travel"]}`);
     if (answers["immune"])     fragments.push(`immunocompromised: ${answers["immune"]}`);
-    } else if (key === "htn_fu") {
+    } else if (key === "htn_fup") {
     if (answers["home_bp"])   fragments.push(`home BP around ${answers["home_bp"]}`);
     if (answers["meds_now"])  fragments.push(`on antihypertensive meds: ${answers["meds_now"]}`);
     if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
     if (answers["symptoms"])  fragments.push(`symptoms: ${answers["symptoms"]}`);
 
-  } else if (key === "dm_fu") {
+  } else if (key === "dm_fup") {
     if (answers["home_glu"])  fragments.push(`home glucose around ${answers["home_glu"]}`);
     if (answers["a1c"])       fragments.push(`last HbA1c: ${answers["a1c"]}`);
     if (answers["meds_now"])  fragments.push(`on diabetes meds: ${answers["meds_now"]}`);
     if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
     if (answers["symptoms"])  fragments.push(`symptoms: ${answers["symptoms"]}`);
 
-  } else if (key === "lipid_fu") {
+  } else if (key === "lipid_fup") {
     if (answers["lipid_val"]) fragments.push(`recent lipid profile: ${answers["lipid_val"]}`);
     if (answers["meds_now"])  fragments.push(`on lipid-lowering meds: ${answers["meds_now"]}`);
     if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
@@ -1369,10 +1337,6 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   }
 
   const tpl = templates[key];
-if (!tpl) {
-  historyArea.textContent = `Template not found: ${key}`;
-  return;
-}
 
   // ===== History answers =====
   const answers = {};
