@@ -1008,7 +1008,7 @@ ccSelect.addEventListener("change", () => {
     historyArea.appendChild(input);
   });
     // ===== HLP core questions (for chronic disease follow-up) =====
-  if (["htn_fu", "hld_fu", "dm_fu"].includes(key)) {
+if (key === "lipid_fu") {
     const hr = document.createElement("hr");
     hr.style.margin = "12px 0";
     historyArea.appendChild(hr);
@@ -1369,6 +1369,10 @@ document.getElementById("generateBtn").addEventListener("click", () => {
   }
 
   const tpl = templates[key];
+if (!tpl) {
+  historyArea.textContent = `Template not found: ${key}`;
+  return;
+}
 
   // ===== History answers =====
   const answers = {};
