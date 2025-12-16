@@ -1008,7 +1008,7 @@ ccSelect.addEventListener("change", () => {
     historyArea.appendChild(input);
   });
     // ===== HLP core questions (for chronic disease follow-up) =====
-  if (["htn_fup", "lipid_fup", "dm_fup"].includes(key)) {
+  if (["htn_fu", "hld_fu", "dm_fu"].includes(key)) {
     const hr = document.createElement("hr");
     hr.style.margin = "12px 0";
     historyArea.appendChild(hr);
