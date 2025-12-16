@@ -8,7 +8,12 @@
 // =====================================================
 
 import { escEas2025RiskStratify } from "./escRisk.js";
-import { lipidEvidence, nhiRiskFactors } from "./lipidEvidence.js";
+import {
+  lipidEvidence,
+  nhiRiskFactors,
+  escStatinDoseSuggestion,
+} from "./lipidEvidence.js";
+
 
 // -------------------------
 // Utilities
@@ -204,9 +209,20 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
         : "- (ESC) 此風險層級未設定強制 LDL-C 數值目標；⚠️這不代表 Taiwan NHI 沒有門檻/目標，NHI 請只看 evidence pack。\n") +
       "=== END ESC RISK ===\n\n"
     : "";
+  const statinSuggestionBlock =
+    escRisk && escStatinDoseSuggestion?.[escRisk.category]
+      ? "\n\n=== 建議 Statin 劑量（ESC/EAS 2025） ===\n" +
+        `治療目標：${escStatinDoseSuggestion[escRisk.category].goal}\n` +
+        "建議選項：\n" +
+        escStatinDoseSuggestion[escRisk.category].options
+          .map((opt) => `- ${opt}`)
+          .join("\n") +
+        "\n（以最大可耐受劑量起始，未達標再加 ezetimibe）\n"
+      : "";
 
   return (
     escRiskBlock +
+    statinSuggestionBlock +
     "You are a family medicine clinical decision support system practicing in Taiwan.\n\n" +
     "You are assisting a physician in an outpatient clinic with limited time.\n" +
     "Your goal is to provide SAFE, GUIDELINE-BASED, and PRACTICAL recommendations.\n\n" +
