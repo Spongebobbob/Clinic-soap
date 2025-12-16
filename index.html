@@ -752,7 +752,7 @@ dizziness: {
   },
 
   // ---- Chronic disease follow-up ----
-  htn_fup: {
+  htn_fu: {
     nameEn: "hypertension follow-up",
     history: [
       { id:"duration",  labelEn:"Duration since diagnosis", labelZh:"高血壓診斷多久？" },
@@ -769,7 +769,7 @@ dizziness: {
     ]
   },
 
-  dm_fup: {
+  dm_fu: {
     nameEn: "diabetes follow-up",
     history: [
       { id:"duration",  labelEn:"Duration since diagnosis", labelZh:"糖尿病診斷多久？" },
@@ -787,7 +787,7 @@ dizziness: {
     ]
   },
 
-  lipid_fup: {
+  lipid_fu: {
     nameEn: "hyperlipidemia follow-up",
     history: [
       { id:"duration",   labelEn:"Duration",             labelZh:"高血脂診斷多久？" },
@@ -1264,20 +1264,20 @@ function buildPiSentence(key, tpl, answers, age, sex) {
     if (answers["weight"])     fragments.push(`weight loss/night sweats: ${answers["weight"]}`);
     if (answers["travel"])     fragments.push(`travel/exposure: ${answers["travel"]}`);
     if (answers["immune"])     fragments.push(`immunocompromised: ${answers["immune"]}`);
-    } else if (key === "htn_fup") {
+    } else if (key === "htn_fu") {
     if (answers["home_bp"])   fragments.push(`home BP around ${answers["home_bp"]}`);
     if (answers["meds_now"])  fragments.push(`on antihypertensive meds: ${answers["meds_now"]}`);
     if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
     if (answers["symptoms"])  fragments.push(`symptoms: ${answers["symptoms"]}`);
 
-  } else if (key === "dm_fup") {
+  } else if (key === "dm_fu") {
     if (answers["home_glu"])  fragments.push(`home glucose around ${answers["home_glu"]}`);
     if (answers["a1c"])       fragments.push(`last HbA1c: ${answers["a1c"]}`);
     if (answers["meds_now"])  fragments.push(`on diabetes meds: ${answers["meds_now"]}`);
     if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
     if (answers["symptoms"])  fragments.push(`symptoms: ${answers["symptoms"]}`);
 
-  } else if (key === "lipid_fup") {
+  } else if (key === "lipid_fu") {
     if (answers["lipid_val"]) fragments.push(`recent lipid profile: ${answers["lipid_val"]}`);
     if (answers["meds_now"])  fragments.push(`on lipid-lowering meds: ${answers["meds_now"]}`);
     if (answers["adherence"]) fragments.push(`adherence: ${answers["adherence"]}`);
