@@ -252,6 +252,7 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
     "2)【Evidence & Guideline Support】僅輸出 1 行、格式固定如下（超出視為錯誤）：\n- <一句話結論> (<單一 evidence id>)\n" +
     "（規則：不得重述 Plan；不得提 Lp(a)；不得提 ezetimibe/PCSK9）\n" +
     "   - 每一小點僅限【一句話＋evidence id】，禁止重述 Plan 或 lab interpretation。\n" +
+    "（額外規則：若 SOAP 中出現 LDL-C ≥190 mg/dL，Evidence 句子不得使用 'low risk' 字樣；請改寫為 'Severe hypercholesterolemia (LDL-C ≥190) without major ESC high/very-high risk features'，並仍需附 1 個 ESC evidence id）\n" +
     "3)【Taiwan NHI 給付考量】僅輸出 1 行、格式固定如下（超出視為錯誤）：\n- Eligible/Not eligible: <門檻數值> (<單一 NHI evidence id>)\n" +
 "（規則：不得同時寫 Eligible 與 Not eligible；不得解釋門檻推導；不得提 secondary prevention 除非 SOAP 明確有 ASCVD/ACS/PCI/CABG）\n"
 
