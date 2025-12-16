@@ -248,12 +248,13 @@ function buildPlanPrompt({ soap, injectEvidence, escRisk }) {
 
     "請用【繁體中文】回答（醫學名詞可保留英文，如 LDL-C、ASCVD、Lp(a)、statin）。\n" +
     "請務必包含以下段落（用清楚標題＋條列）：\n" +
-    "1)【Plan】僅列出【實際要做的醫囑】（藥物、劑量、追蹤），禁止重複解釋檢驗數值或風險判定；每個 bullet 不超過 1 行。\n" +
-    "2)【Evidence & Guideline Support】\n" +
-    "   - 若有 evidence pack：只用 evidence pack，引用請用 evidence id（例如 NHI_xxx、ESC2025_xxx）。\n" +
+    "1)【Plan】僅輸出 3 行、格式固定如下（超出視為錯誤）：\n- <statin + dose + frequency>\n- Lifestyle modification\n- Lipid profile + ALT in 8–12 weeks\n（規則：不得解釋檢驗值；不得出現 ezetimibe/PCSK9，除非 ESC 風險為 high/very_high 或明確 ASCVD/糖尿病高風險；不得分小標題）\n" +
+    "2)【Evidence & Guideline Support】僅輸出 1 行、格式固定如下（超出視為錯誤）：\n- <一句話結論> (<單一 evidence id>)\n" +
+    "（規則：不得重述 Plan；不得提 Lp(a)；不得提 ezetimibe/PCSK9）\n" +
     "   - 每一小點僅限【一句話＋evidence id】，禁止重述 Plan 或 lab interpretation。\n" +
-    "7)【Taiwan NHI 給付考量】\n" +
-    "   - 僅用【是 / 否 + 門檻值 + evidence id】條列，不得重複醫學建議或 ESC 內容。\n"
+    "3)【Taiwan NHI 給付考量】僅輸出 1 行、格式固定如下（超出視為錯誤）：\n- Eligible/Not eligible: <門檻數值> (<單一 NHI evidence id>)\n" +
+"（規則：不得同時寫 Eligible 與 Not eligible；不得解釋門檻推導；不得提 secondary prevention 除非 SOAP 明確有 ASCVD/ACS/PCI/CABG）\n"
+
 
   );
 }
