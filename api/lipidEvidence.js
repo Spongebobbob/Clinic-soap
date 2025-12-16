@@ -833,3 +833,39 @@ export function getNhiEligibilityFromSoap(soap) {
     fhPrematureASCVD: patient.fhPrematureASCVD,
   });
 }
+
+// ==================================================
+// 7) ESC/EAS 2025 – STATIN DOSE SUGGESTION (OPERATIONAL)
+// ==================================================
+export const escStatinDoseSuggestion = {
+  very_high: {
+    goal: "LDL-C <55 mg/dL AND ≥50% reduction",
+    options: [
+      "Atorvastatin 40–80 mg daily",
+      "Rosuvastatin 20–40 mg daily",
+    ],
+  },
+  high: {
+    goal: "LDL-C <70 mg/dL AND ≥50% reduction",
+    options: [
+      "Atorvastatin 20–40 mg daily",
+      "Rosuvastatin 10–20 mg daily",
+    ],
+  },
+  moderate: {
+    goal: "LDL-C <100 mg/dL",
+    options: [
+      "Atorvastatin 10–20 mg daily",
+      "Rosuvastatin 5–10 mg daily",
+      "Simvastatin 20–40 mg daily",
+    ],
+  },
+  low: {
+    goal: "No fixed LDL-C target; shared decision",
+    options: [
+      "Lifestyle modification ± low-dose statin",
+      "Atorvastatin 10 mg daily",
+      "Rosuvastatin 5 mg daily",
+    ],
+  },
+};
