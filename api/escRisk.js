@@ -161,6 +161,9 @@ export function escEas2025RiskStratify(patient = {}) {
     (!!patient.familyHistoryPrematureASCVD) ||
     (!!patient.obesity) ||
     (!!patient.metabolicSyndrome);
+// === ESC 2025: Lp(a) is a risk-enhancing factor ONLY ===
+// Do NOT allow Lp(a) to reclassify risk category
+// (Handled in treatment decision, not risk stratification)
 
   if (hasSomeRF || fh) {
     if (fh) reasons.push("Possible familial hypercholesterolemia noted (needs confirmation).");
