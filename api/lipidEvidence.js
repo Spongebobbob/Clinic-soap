@@ -421,16 +421,6 @@ export const lipidEvidence = {
   quote: null,
 },
 
-{
-  id: "NHI_LDL_PRIMARY_PREV_RF_EQ0",
-  appliesTo: "Primary prevention with 0 risk factors",
-  nonPharm: "3–6 months lifestyle/nonpharmacologic therapy before starting medication",
-  startThreshold: { ldl_mgdl_gte: 190 },
-  goal: { ldl_mgdl_lt: 190 },
-  source: "Taiwan NHI lipid-lowering reimbursement table",
-  quote: null,
-},
-
 // --- Taiwan NHI reimbursement: Triglyceride-lowering (from the TG table you provided) ---
 {
   id: "NHI_TG_CVD_OR_DM",
