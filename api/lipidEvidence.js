@@ -266,16 +266,6 @@ export const lipidEvidence = {
         "Lp(a) levels above 50 mg/dL should be considered a cardiovascular risk-enhancing factor.",
     },
     {
-      id: "ESC2025_LPA_INTENSIVE_LDL",
-      appliesTo: "Elevated Lp(a) / residual high risk",
-      recommendation:
-        "Early risk factor management and more intensive LDL-C lowering is reasonable",
-      guideline: "ESC/EAS 2025",
-      year: 2025,
-      quote:
-        "Early risk factor management and more intensive LDL-C lowering is reasonable.",
-    },
-    {
   id: "ESC2025_LPA_NOTE_NO_RECLASS",
   appliesTo: "Elevated Lp(a) without ASCVD",
   note: "Elevated Lp(a) is a risk-enhancing factor and does NOT by itself reclassify patients into severe hypercholesterolemia or very-high-risk categories.",
