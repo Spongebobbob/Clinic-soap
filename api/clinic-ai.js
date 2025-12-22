@@ -261,7 +261,7 @@ soap +
     "2)【Evidence & Guideline Support】僅輸出 1 行、格式固定如下（超出視為錯誤）：\n- <一句話結論> (<單一 evidence id>)\n" +
     "（規則：不得重述 Plan；不得提 Lp(a)；不得提 ezetimibe/PCSK9）\n" +
     "   - 每一小點僅限【一句話＋evidence id】，禁止重述 Plan 或 lab interpretation。\n" +
-    "（額外規則：若 SOAP 中出現 LDL-C ≥190 mg/dL，Evidence 句子不得使用 'low risk' 字樣；請改寫為 'Severe hypercholesterolemia (LDL-C ≥190) without major ESC high/very-high risk features'，並仍需附 1 個 ESC evidence id）\n" +
+    "（額外規則：只有在 SOAP 文字中『明確出現 LDL 且數值 ≥190 mg/dL』時，Evidence 句子才可以使用：'Severe hypercholesterolemia (LDL-C ≥190) without major ESC high/very-high risk features'；若 LDL <190 或未提供 LDL，Evidence 句子禁止使用 severe hypercholesterolemia/LDL≥190 相關字樣。）\n" +
     "【硬規則】Taiwan NHI 請完全依照上方 [NHI auto-check] 的 category 與 risk factors 選擇『唯一正確』的 evidence id：\n" +
 "- primary_prevention 且 risk factors = 0 → 用 NHI_LDL_PRIMARY_PREV_RF_EQ0\n" +
 "- primary_prevention 且 risk factors = 1 → 用 NHI_LDL_PRIMARY_PREV_RF_EQ1\n" +
