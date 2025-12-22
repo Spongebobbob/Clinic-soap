@@ -96,16 +96,6 @@ export const lipidEvidence = {
       section: "Figure 1 (as summarized/quoted in uploaded doc)",
     },
     {
-  id: "ESC2025_LOW_RISK_NO_MANDATORY_STATIN",
-  appliesTo: "Low or moderate risk primary prevention",
-  rule:
-    "In low or moderate risk patients without LDL-C targets, statin therapy is optional and should be based on shared decision-making; lifestyle modification alone is acceptable.",
-  guideline: "ESC/EAS Dyslipidaemia Guideline – Focused Update",
-  year: 2025,
-  note:
-    "Lp(a) may enhance risk discussion but does NOT mandate statin initiation in absence of high or very-high risk.",
-},
-    {
       id: "ACC2018_THRESHOLD_STRATEGY",
       guideline: "ACC/AHA Cholesterol Guideline",
       year: 2018,
@@ -282,6 +272,14 @@ export const lipidEvidence = {
   guideline: "ESC/EAS 2025",
   year: 2025,
     },
+{
+  id: "ESC2025_LPA_DECISION_GUARD",
+  appliesTo: "Low or moderate risk primary prevention with elevated Lp(a)",
+  rule:
+    "If overall ESC risk category is low or moderate and there is no ASCVD, elevated Lp(a) alone should NOT automatically trigger statin therapy. Management should focus on lifestyle modification and shared decision-making.",
+  guideline: "ESC/EAS 2025",
+  year: 2025,
+},
 
   ],
 
