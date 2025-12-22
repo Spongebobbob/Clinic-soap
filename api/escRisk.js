@@ -162,6 +162,10 @@ export function escEas2025RiskStratify(patient = {}) {
     (!!patient.obesity) ||
     (!!patient.metabolicSyndrome);
 // === ESC 2025: Lp(a) is a risk-enhancing factor ONLY ===
+  // Guard: Lp(a) missing or not measured must NOT influence risk category
+if (patient.lpa === null || patient.lpa === undefined) {
+  // explicitly do nothing
+}
 // Do NOT allow Lp(a) to reclassify risk category
 // (Handled in treatment decision, not risk stratification)
 
