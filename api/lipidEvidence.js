@@ -275,6 +275,14 @@ export const lipidEvidence = {
       quote:
         "Early risk factor management and more intensive LDL-C lowering is reasonable.",
     },
+    {
+  id: "ESC2025_LPA_NOTE_NO_RECLASS",
+  appliesTo: "Elevated Lp(a) without ASCVD",
+  note: "Elevated Lp(a) is a risk-enhancing factor and does NOT by itself reclassify patients into severe hypercholesterolemia or very-high-risk categories.",
+  guideline: "ESC/EAS 2025",
+  year: 2025,
+    },
+
   ],
 
   // ==================================================
