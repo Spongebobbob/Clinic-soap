@@ -1700,6 +1700,20 @@ Here is the clinic SOAP or clinical context:
 """${soapText}"""
 `;
 }
+// === 新增：主治慢性病追蹤建議按鈕 ===
+document.getElementById("chronicNoteBtn").addEventListener("click", async () => {
+  const soap = document.getElementById("output").value;
+
+  if (!soap || !soap.trim()) {
+    alert("請先產生 SOAP");
+    return;
+  }
+
+  callAI({
+    mode: "plan",
+    soap: "【慢性病追蹤模式】\n" + soap,
+  });
+});
 
 });
 
