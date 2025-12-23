@@ -1517,6 +1517,40 @@ document.getElementById("chronicNoteBtn").addEventListener("click", async () => 
   }
 
   document.getElementById("aiStatus").innerText = "";
+
+  document.getElementById("chronicNoteBtn").addEventListener("click", async () => {
+  const soapText =
+    document.getElementById("output").value +
+    "\n\n" +
+    document.getElementById("freeAiInput").value;
+
+  if (!soapText.trim()) {
+    alert("請先產生 SOAP 或貼上病況摘要");
+    return;
+  }
+
+  document.getElementById("aiStatus").innerText = "產生主治慢性病追蹤建議中…";
+
+  try {
+    const res = await fetch("/api/clinic-ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "chronic_followup",
+        soap: soapText
+      })
+    });
+
+    const data = await res.json();
+    document.getElementById("aiResult").innerText =
+      data.result || data.output || "產生失敗";
+  } catch (e) {
+    document.getElementById("aiResult").innerText = "發生錯誤，請稍後再試";
+  }
+
+  document.getElementById("aiStatus").innerText = "";
+});
+
 });
 
 
