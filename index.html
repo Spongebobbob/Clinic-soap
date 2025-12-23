@@ -209,6 +209,8 @@ Sex:
     <strong>Output:</strong>
     <textarea id="output"></textarea>
       <button id="askAiBtn">Plan</button>
+    <button id="chronicPlanBtn">主治慢性病追蹤</button>
+
   </div>
 
   <!-- Doctor note -->
@@ -1528,6 +1530,34 @@ async function callAIWithText(text, mode) {
 askAiBtn.addEventListener("click", () => {
   const text = output.value.trim();
   callAIWithText(text, "plan");
+  
+});
+document.getElementById("chronicPlanBtn").addEventListener("click", async () => {
+  const soap = document.getElementById("output").value;
+
+  if (!soap.trim()) {
+    alert("請先產生或貼上 SOAP 再使用此功能");
+    return;
+  }
+
+  const res = await fetch("/api/clinic-ai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode: "chronic_plan",
+      soap: soap,
+      max_output_tokens: 300
+    })
+  });
+
+  const data = await res.json();
+
+  if (data.error) {
+    alert("AI error: " + data.error);
+    return;
+  }
+
+  document.getElementById("aiResult").textContent = data.text || "";
 });
 
 
