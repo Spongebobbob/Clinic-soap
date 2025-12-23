@@ -6,7 +6,7 @@
 // - im_consult: 內科顧問（英文）
 // - plan (default): 綜合 plan（中文）+ evidence pack + ESC risk engine (hard-locked)
 // =====================================================
-
+import fetch from "node-fetch";
 import { escEas2025RiskStratify } from "./escRisk.js";
 import {
   lipidEvidence,
@@ -332,7 +332,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const prompt = `
+  prompt = `
 You are a senior family medicine attending physician practicing in Taiwan.
 
 TASK:
@@ -388,7 +388,6 @@ Here is the clinic SOAP or clinical context:
 
   res.json({ result: text });
   return;
-}
     } else {
       // plan
       if (!soap) {
