@@ -209,6 +209,8 @@ Sex:
     <strong>Output:</strong>
     <textarea id="output"></textarea>
       <button id="askAiBtn">Plan</button>
+    <button id="chronicNoteBtn">主治慢性病追蹤建議</button>
+
   </div>
 
   <!-- Doctor note -->
@@ -1478,6 +1480,46 @@ const freeAiBtn = document.getElementById("freeAiBtn");
 const AI_API_URL = "/api/clinic-ai";
 const hxSuggestBtn = document.getElementById("hxSuggestBtn");
 
+document.getElementById("chronicNoteBtn").addEventListener("click", async () => {
+  const soapText =
+    document.getElementById("output").value +
+    "\n\n" +
+    document.getElementById("freeAiInput").value;
+
+  if (!soapText.trim()) {
+    alert("請先產生 SOAP 或貼上病況摘要");
+    return;
+  }
+
+  const prompt = buildChronicFollowupPrompt(soapText);
+
+  document.getElementById("aiStatus").innerText = "產生主治慢性病追蹤建議中…";
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer YOUR_API_KEY"
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.2
+      })
+    });
+
+    const data = await response.json();
+    document.getElementById("aiResult").innerText =
+      data.choices?.[0]?.message?.content || "產生失敗";
+  } catch (err) {
+    document.getElementById("aiResult").innerText = "發生錯誤，請稍後再試";
+  }
+
+  document.getElementById("aiStatus").innerText = "";
+});
+
+
 // ----------- 共用函式：丟文字給 AI，顯示回覆 -----------
 async function callAIWithText(text, mode) {
   const clean = (text || "").trim();
@@ -1589,6 +1631,42 @@ hxSuggestBtn.addEventListener("click", async () => {
     aiStatus.textContent = "Network or server error.";
     console.error(e);
   }
+  function buildChronicFollowupPrompt(soapText) {
+  return `
+You are a senior family medicine attending physician practicing in Taiwan.
+
+TASK:
+Write an attending-level outpatient medication comment for chronic disease follow-up.
+This comment is intended to be pasted directly into the medical record.
+
+RULES (HARD):
+- Write in Traditional Chinese.
+- Exactly ONE paragraph, 2–3 sentences.
+- No bullet points, no numbering.
+- Do NOT restate diagnoses or lab values.
+- Do NOT explain rationale, mechanisms, or guidelines.
+- Do NOT use vague phrases such as「以評估」、「後續追蹤」、「相關情形」、「視情況」、「必要時」.
+- If medication adjustment is needed, state drug name, exact dose, and frequency explicitly.
+- If no medication change is needed, clearly state to continue current regimen.
+- Every output MUST include a clear follow-up timing.
+
+ALLOWED FOLLOW-UP TIMING (choose ONE only):
+- 一週後回診
+- 兩週後回診
+- 一個月後回診
+- 三個月後回診
+- 六至八週後回診
+- 症狀變化提前回診
+- 自行安排回診追蹤
+
+OUTPUT HEADER (FIXED):
+【主治慢性病追蹤建議】
+
+Here is the clinic SOAP or clinical context:
+"""${soapText}"""
+`;
+}
+
 });
 
 </script>
